@@ -1,0 +1,21 @@
+[package]
+name = "markex"
+version = "0.1.0-alpha.1"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "Fast, non-validating markup element extractor (Tag Element, MdRef, MdCodeBlock, MDSection)"
+homepage = "https://github.com/jeremychone/rust-tagx"
+repository = "https://github.com/jeremychone/rust-tagx"
+
+[lib]
+doctest = false
+
+[lints.rust]
+unsafe_code = "forbid"
+# unused = { level = "allow", priority = -1 } # For exploratory dev.
+
+[dependencies]
+# -- Json & Data Files
+serde = { version = "1", features = ["derive"] }
+# -- Others
+derive_more = {version = "2", features = ["from", "display"] }
