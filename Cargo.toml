@@ -1,11 +1,11 @@
 [package]
 name = "markex"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "Fast, non-validating markup element extractor (Tag Element, MdRef, MdCodeBlock, MDSection)"
-homepage = "https://github.com/jeremychone/rust-tagx"
-repository = "https://github.com/jeremychone/rust-tagx"
+homepage = "https://github.com/jeremychone/rust-markex"
+repository = "https://github.com/jeremychone/rust-markex"
 
 [lib]
 doctest = false
