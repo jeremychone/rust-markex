@@ -1,12 +1,12 @@
 //! Iterator to extract structured `TagElem`s including content and parsed attributes.
 
-use super::TagElem;
-use super::TagElemRefIterator;
+use super::{Part, TagElem, TagElemRefIterator};
 use super::attrs_parser::parse_attribute;
 use super::tag_elem_ref_iter::PartRef;
 
-/// Iterator that yields `TagElem` instances found within a text based on specific tag names.
-/// It uses `TagElemRefIterator` internally to find tag boundaries.
+/// Iterator that yields owned `Part` instances (`Text` or `TagElem`), found within a text
+/// based on specific tag names.
+/// It consumes the referenced elements from `TagElemRefIterator` and converts them to owned types.
 pub struct TagElemIter<'a> {
 	tag_content_iter: TagElemRefIterator<'a>,
 }
@@ -39,24 +39,17 @@ impl<'a> TagElemIter<'a> {
 }
 
 impl Iterator for TagElemIter<'_> {
-	type Item = TagElem;
+	type Item = Part;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		loop {
-			match self.tag_content_iter.next()? {
-				PartRef::Text(_) => {
-					// Skip text fragments, only yield TagElems
-					continue;
-				}
-				PartRef::TagElemRef(tag_content) => {
-					return Some(TagElem {
-						tag: tag_content.tag_name.to_string(),
-						attrs: parse_attribute(tag_content.attrs_raw),
-						content: tag_content.content.to_string(),
-					});
-				}
-			}
-		}
+		self.tag_content_iter.next().map(|part_ref| match part_ref {
+			PartRef::Text(text) => Part::Text(text.to_string()),
+			PartRef::TagElemRef(tag_content) => Part::TagElem(TagElem {
+				tag: tag_content.tag_name.to_string(),
+				attrs: parse_attribute(tag_content.attrs_raw),
+				content: tag_content.content.to_string(),
+			}),
+		})
 	}
 }
 

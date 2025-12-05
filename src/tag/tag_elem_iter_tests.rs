@@ -1,7 +1,6 @@
 //! Tests for the TagElemIter.
 
-use crate::tag::TagElem;
-use crate::tag::TagElemIter;
+use crate::tag::{Part, TagElem, TagElemIter};
 use std::collections::HashMap;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -13,27 +12,29 @@ fn test_support_tag_elem_iter_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let iter = TagElemIter::new_single_tag(text, tag_name);
-	let blocks: Vec<TagElem> = iter.collect();
+	let parts: Vec<Part> = TagElemIter::new_single_tag(text, tag_name).collect();
 
 	// -- Check
-	assert_eq!(blocks.len(), 2);
+	assert_eq!(parts.len(), 5);
+	assert_eq!(parts[0], Part::Text("Some text ".to_string()));
 	assert_eq!(
-		blocks[0],
-		TagElem {
+		parts[1],
+		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: None,
 			content: "content1".to_string()
-		}
+		})
 	);
+	assert_eq!(parts[2], Part::Text(" more text ".to_string()));
 	assert_eq!(
-		blocks[1],
-		TagElem {
+		parts[3],
+		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: None,
 			content: "content2".to_string()
-		}
+		})
 	);
+	assert_eq!(parts[4], Part::Text(" final.".to_string()));
 
 	Ok(())
 }
@@ -45,11 +46,11 @@ fn test_support_tag_elem_iter_with_attrs() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let iter = TagElemIter::new_single_tag(text, tag_name);
-	let blocks: Vec<TagElem> = iter.collect();
+	let parts: Vec<Part> = TagElemIter::new_single_tag(text, tag_name).collect();
 
 	// -- Check
-	assert_eq!(blocks.len(), 1);
+	assert_eq!(parts.len(), 2);
+	assert_eq!(parts[0], Part::Text("Some ".to_string()));
 
 	let mut expected_attrs = HashMap::new();
 	expected_attrs.insert("path".to_string(), "a/b.txt".to_string());
@@ -58,12 +59,12 @@ fn test_support_tag_elem_iter_with_attrs() -> Result<()> {
 	expected_attrs.insert("message".to_string(), "hello world".to_string());
 
 	assert_eq!(
-		blocks[0],
-		TagElem {
+		parts[1],
+		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: Some(expected_attrs.clone()),
 			content: "value".to_string()
-		}
+		})
 	);
 
 	Ok(())
@@ -76,11 +77,11 @@ fn test_support_tag_elem_iter_no_tags() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let iter = TagElemIter::new_single_tag(text, tag_name);
-	let blocks: Vec<TagElem> = iter.collect();
+	let parts: Vec<Part> = TagElemIter::new_single_tag(text, tag_name).collect();
 
 	// -- Check
-	assert!(blocks.is_empty());
+	assert_eq!(parts.len(), 1);
+	assert_eq!(parts[0], Part::Text(text.to_string()));
 
 	Ok(())
 }
@@ -92,31 +93,36 @@ fn test_support_tag_elem_iter_multiple_tag_names() -> Result<()> {
 	let tag_names = ["ONE", "TWO"];
 
 	// -- Exec
-	let iter = TagElemIter::new(text, &tag_names);
-	let blocks: Vec<TagElem> = iter.collect();
+	let parts: Vec<Part> = TagElemIter::new(text, &tag_names).collect();
 
 	// -- Check
-	assert_eq!(blocks.len(), 2);
+	assert_eq!(parts.len(), 5);
+	assert_eq!(parts[0], Part::Text("Alpha ".to_string()));
+
+	assert_eq!(
+		parts[1],
+		Part::TagElem(TagElem {
+			tag: "ONE".to_string(),
+			attrs: None,
+			content: "first".to_string()
+		})
+	);
+
+	assert_eq!(parts[2], Part::Text(" Beta ".to_string()));
 
 	let mut expected_attrs = HashMap::new();
 	expected_attrs.insert("attr".to_string(), "ok".to_string());
 
 	assert_eq!(
-		blocks[0],
-		TagElem {
-			tag: "ONE".to_string(),
-			attrs: None,
-			content: "first".to_string()
-		}
-	);
-	assert_eq!(
-		blocks[1],
-		TagElem {
+		parts[3],
+		Part::TagElem(TagElem {
 			tag: "TWO".to_string(),
 			attrs: Some(expected_attrs),
 			content: "second".to_string()
-		}
+		})
 	);
+
+	assert_eq!(parts[4], Part::Text(" Gamma".to_string()));
 
 	Ok(())
 }

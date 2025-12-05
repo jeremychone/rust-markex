@@ -81,10 +81,11 @@ pub struct ExtractedData {
 
 #### Iterator `TagElemIter`
 
-An iterator that yields only `TagElem` objects, skipping intervening text fragments.
+An iterator that yields owned `Part` objects (`Text` or `TagElem`), providing the full sequence of fragments in the input string.
+If you only need `TagElem`s, you can filter this iterator, or use `extract` and then `ExtractedData::into_tag_elems`.
 
 ```rust
-pub struct TagElemIter<'a> // Implements Iterator<Item = TagElem>
+pub struct TagElemIter<'a> // Implements Iterator<Item = Part>
 ```
 **Constructors (use `use markex::tag::TagElemIter;`):**
 
@@ -101,12 +102,17 @@ fn main() -> Result<()> {
     let tag_name = "FILE";
 
     // 1. Simple iteration using TagElemIter
-    for elem in TagElemIter::new_single_tag(input, tag_name) {
-        println!("Found tag: {elem.tag}");
-        if let Some(path) = elem.attrs.and_then(|a| a.get("path").cloned()) {
-            println!("  Path: {path}");
+    for part in TagElemIter::new_single_tag(input, tag_name) {
+        match part {
+            Part::Text(t) => println!("Text: {t:?}"),
+            Part::TagElem(e) => {
+                println!("Found tag: {e.tag}");
+                if let Some(path) = e.attrs.and_then(|a| a.get("path").cloned()) {
+                    println!("  Path: {path}");
+                }
+                println!("  Content: {e.content}");
+            }
         }
-        println!("  Content: {elem.content}");
     }
     
     // 2. Detailed parsing using extract() to capture all fragments

@@ -13,9 +13,12 @@ Fast, **non-validating** markup element extractor (XML like tags, Markdown Ref, 
 
 ```rust
 use std::error::Error;
-use markex::tag;
+use markex::tag::{self, Part};
 
-fn main() -> Result<Box dyn<Error>> {
+// Using standard Result alias for examples
+type Result<T> = core::result::Result<T, Box<dyn Error>>;
+
+fn main() -> Result<()> {
     let input = "Text before <MY_TAG>some content</MY_TAG> and after.";
     
     let extracted_data = tag::extract(input, &["MY_TAG"], true); 
