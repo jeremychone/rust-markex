@@ -89,8 +89,8 @@ pub struct TagElemIter<'a> // Implements Iterator<Item = Part>
 ```
 **Constructors (use `use markex::tag::TagElemIter;`):**
 
-- `pub fn new(input: &'a str, tag_names: &[&'a str]) -> Self`: Iterates over multiple tag names.
-- `pub fn new_single_tag(input: &'a str, tag_name: &'a str) -> Self`: Convenience for a single tag name.
+- `pub fn new(input: &'a str, tag_names: &[&'a str], capture_text: bool) -> Self`: Iterates over multiple tag names.
+- `pub fn new_single_tag(input: &'a str, tag_name: &'a str, capture_text: bool) -> Self`: Convenience for a single tag name.
 
 ### Example Usage
 
@@ -102,7 +102,7 @@ fn main() -> Result<()> {
     let tag_name = "FILE";
 
     // 1. Simple iteration using TagElemIter
-    for part in TagElemIter::new_single_tag(input, tag_name) {
+    for part in TagElemIter::new_single_tag(input, tag_name, true) {
         match part {
             Part::Text(t) => println!("Text: {t:?}"),
             Part::TagElem(e) => {

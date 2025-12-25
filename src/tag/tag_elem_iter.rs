@@ -18,9 +18,10 @@ impl<'a> TagElemIter<'a> {
 	///
 	/// * `input` - The string slice to search within.
 	/// * `tag_names` - A slice of tag names to search for (e.g., &["FILE", "DATA"]).
-	pub fn new(input: &'a str, tag_names: &[&'a str]) -> Self {
+	/// * `capture_text` - If true, includes `Part::Text` fragments in the result.
+	pub fn new(input: &'a str, tag_names: &[&'a str], capture_text: bool) -> Self {
 		let tag_names_vec: Vec<&'a str> = tag_names.to_vec();
-		let tag_content_iter = TagElemRefIterator::new(input, &tag_names_vec);
+		let tag_content_iter = TagElemRefIterator::new(input, &tag_names_vec, capture_text);
 
 		Self { tag_content_iter }
 	}
@@ -33,8 +34,9 @@ impl<'a> TagElemIter<'a> {
 	///
 	/// * `input` - The string slice to search within.
 	/// * `tag_name` - The name of the tag to search for (e.g., "FILE").
-	pub fn new_single_tag(input: &'a str, tag_name: &'a str) -> Self {
-		Self::new(input, &[tag_name])
+	/// * `capture_text` - If true, includes `Part::Text` fragments in the result.
+	pub fn new_single_tag(input: &'a str, tag_name: &'a str, capture_text: bool) -> Self {
+		Self::new(input, &[tag_name], capture_text)
 	}
 }
 

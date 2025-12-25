@@ -1,8 +1,8 @@
 //! Parser module for extracting tag elements and text fragments from input.
 
-use super::support::parse_attribute;
+use crate::tag::TagElemIter;
+
 use super::tag_elem::{Part, TagElem};
-use super::tag_elem_ref_iter::{PartRef, TagElemRefIterator};
 use serde::Serialize;
 
 /// Result of extracting data and parts from input.
@@ -85,25 +85,8 @@ impl ExtractedData {
 ///
 /// A `ExtractedData` containing the extracted parts.
 pub fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> ExtractedData {
-	let iter = TagElemRefIterator::new(input, tag_names);
-	let mut parts = Vec::new();
-
-	for part_ref in iter {
-		match part_ref {
-			PartRef::Text(text) => {
-				if capture_text {
-					parts.push(Part::Text(text.to_string()));
-				}
-			}
-			PartRef::TagElemRef(tag_ref) => {
-				parts.push(Part::TagElem(TagElem {
-					tag: tag_ref.tag_name.to_string(),
-					attrs: parse_attribute(tag_ref.attrs_raw),
-					content: tag_ref.content.to_string(),
-				}));
-			}
-		}
-	}
+	let iter = TagElemIter::new(input, tag_names, capture_text);
+	let parts = iter.collect();
 
 	ExtractedData {
 		tag_names: tag_names.iter().map(|s| s.to_string()).collect(),

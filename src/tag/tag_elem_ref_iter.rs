@@ -71,6 +71,7 @@ pub struct TagElemRefIterator<'a> {
 	tag_patterns: Vec<TagPattern>,
 	pending_tag: Option<TagElemRef<'a>>,
 	finished: bool,
+	capture_text: bool,
 }
 
 impl<'a> TagElemRefIterator<'a> {
@@ -80,7 +81,8 @@ impl<'a> TagElemRefIterator<'a> {
 	///
 	/// * `input` - The string slice to search within.
 	/// * `tag_names` - The names of the tags to search for (e.g., &["FILE", "DATA"]).
-	pub fn new(input: &'a str, tag_names: &[&str]) -> Self {
+	/// * `capture_text` - If true, includes `PartRef::Text` fragments in the result.
+	pub fn new(input: &'a str, tag_names: &[&str], capture_text: bool) -> Self {
 		let tag_infos = tag_names.iter().map(|&name| TagPattern::new(name)).collect();
 		TagElemRefIterator {
 			input,
@@ -89,6 +91,7 @@ impl<'a> TagElemRefIterator<'a> {
 			tag_patterns: tag_infos,
 			pending_tag: None,
 			finished: false,
+			capture_text,
 		}
 	}
 
@@ -213,7 +216,7 @@ impl<'a> Iterator for TagElemRefIterator<'a> {
 		// Try to find the next tag
 		if let Some(tag) = self.find_next_tag() {
 			// Check if there's text before this tag
-			if tag.start_idx > self.last_processed_idx {
+			if self.capture_text && tag.start_idx > self.last_processed_idx {
 				let text = &self.input[self.last_processed_idx..tag.start_idx];
 				self.pending_tag = Some(tag);
 				return Some(PartRef::Text(text));
@@ -226,7 +229,7 @@ impl<'a> Iterator for TagElemRefIterator<'a> {
 
 		// No more tags found, check if there's remaining text
 		self.finished = true;
-		if self.last_processed_idx < self.input.len() {
+		if self.capture_text && self.last_processed_idx < self.input.len() {
 			let text = &self.input[self.last_processed_idx..];
 			self.last_processed_idx = self.input.len();
 			return Some(PartRef::Text(text));
