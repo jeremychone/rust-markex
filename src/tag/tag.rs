@@ -3,15 +3,7 @@
 use serde::Serialize;
 use std::collections::HashMap;
 
-/// Represents a part of parsed content, either plain text or a tag element.
-#[derive(Debug, Serialize, Clone, PartialEq)]
-pub enum Part {
-	/// Plain text content outside of any tag.
-	Text(String),
-
-	/// A tag element with its content.
-	TagElem(TagElem),
-}
+// region:    --- TagElem
 
 /// Represents a block defined by start and end tags, like `<TAG>content</TAG>`.
 #[derive(Debug, Serialize, Clone, PartialEq, Default)]
@@ -33,3 +25,9 @@ impl TagElem {
 		}
 	}
 }
+
+// endregion: --- TagElem
+
+// region:    --- TagElemRef
+
+// endregion: --- TagElemRef

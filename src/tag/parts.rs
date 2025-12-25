@@ -1,15 +1,25 @@
 use serde::Serialize;
 
-use crate::tag::{Part, TagElem};
+use crate::tag::TagElem;
+
+/// Represents a part of parsed content, either plain text or a tag element.
+#[derive(Debug, Serialize, Clone, PartialEq)]
+pub enum Part {
+	/// Plain text content outside of any tag.
+	Text(String),
+
+	/// A tag element with its content.
+	TagElem(TagElem),
+}
 
 /// Result of extracting data and parts from input.
 #[derive(Debug, Serialize, Clone, PartialEq, Default)]
-pub struct ExtractedData {
+pub struct Parts {
 	pub tag_names: Vec<String>,
 	pub parts: Vec<Part>,
 }
 
-impl ExtractedData {
+impl Parts {
 	/// Returns references to all `TagElem` items in the parsed data.
 	pub fn tag_elems(&self) -> Vec<&TagElem> {
 		self.parts
