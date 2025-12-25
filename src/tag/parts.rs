@@ -12,6 +12,15 @@ pub enum Part {
 	TagElem(TagElem),
 }
 
+impl<'a> From<crate::tag::PartRef<'a>> for Part {
+	fn from(part_ref: crate::tag::PartRef<'a>) -> Self {
+		match part_ref {
+			crate::tag::PartRef::Text(text) => Part::Text(text.to_string()),
+			crate::tag::PartRef::TagElemRef(tag_ref) => Part::TagElem(TagElem::from(tag_ref)),
+		}
+	}
+}
+
 /// Result of extracting data and parts from input.
 #[derive(Debug, Serialize, Clone, PartialEq, Default)]
 pub struct Parts {

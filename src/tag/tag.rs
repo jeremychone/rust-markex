@@ -26,6 +26,16 @@ impl TagElem {
 	}
 }
 
+impl From<crate::tag::TagElemRef<'_>> for TagElem {
+	fn from(tag_ref: crate::tag::TagElemRef<'_>) -> Self {
+		TagElem {
+			tag: tag_ref.tag_name.to_string(),
+			attrs: crate::tag::support::parse_attribute(tag_ref.attrs_raw),
+			content: tag_ref.content.to_string(),
+		}
+	}
+}
+
 // endregion: --- TagElem
 
 // region:    --- TagElemRef

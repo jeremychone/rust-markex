@@ -40,7 +40,7 @@ impl TagPattern {
 ///
 /// It searches for pairs of opening `<TAG_NAME...>` and closing `</TAG_NAME>` tags
 /// for one or more configured tag names, yielding both text fragments and tag elements.
-pub struct TagElemRefIterator<'a> {
+pub struct TagRefIter<'a> {
 	input: &'a str,
 	current_pos: usize,
 	last_processed_idx: usize,
@@ -50,8 +50,8 @@ pub struct TagElemRefIterator<'a> {
 	capture_text: bool,
 }
 
-impl<'a> TagElemRefIterator<'a> {
-	/// Creates a new `TagElemRefIterator` for the given input string and tag names.
+impl<'a> TagRefIter<'a> {
+	/// Creates a new `TagRefIter` for the given input string and tag names.
 	///
 	/// # Arguments
 	///
@@ -60,7 +60,7 @@ impl<'a> TagElemRefIterator<'a> {
 	/// * `capture_text` - If true, includes `PartRef::Text` fragments in the result.
 	pub fn new(input: &'a str, tag_names: &[&str], capture_text: bool) -> Self {
 		let tag_infos = tag_names.iter().map(|&name| TagPattern::new(name)).collect();
-		TagElemRefIterator {
+		TagRefIter {
 			input,
 			current_pos: 0,
 			last_processed_idx: 0,
@@ -174,7 +174,7 @@ impl<'a> TagElemRefIterator<'a> {
 	}
 }
 
-impl<'a> Iterator for TagElemRefIterator<'a> {
+impl<'a> Iterator for TagRefIter<'a> {
 	type Item = PartRef<'a>;
 
 	fn next(&mut self) -> Option<Self::Item> {

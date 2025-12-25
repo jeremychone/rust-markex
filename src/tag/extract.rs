@@ -1,6 +1,6 @@
 //! Parser module for extracting tag elements and text fragments from input.
 
-use crate::tag::{Parts, TagIter};
+use crate::tag::{Parts, PartsRef, TagIter, TagRefIter};
 
 /// Parses the input string for the specified tag names.
 ///
@@ -18,6 +18,17 @@ pub fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> Parts {
 	let parts = iter.collect();
 
 	Parts {
+		tag_names: tag_names.iter().map(|s| s.to_string()).collect(),
+		parts,
+	}
+}
+
+/// Parses the input string for the specified tag names and returns references.
+pub fn extract_refs<'a>(input: &'a str, tag_names: &[&str], capture_text: bool) -> PartsRef<'a> {
+	let iter = TagRefIter::new(input, tag_names, capture_text);
+	let parts = iter.collect();
+
+	PartsRef {
 		tag_names: tag_names.iter().map(|s| s.to_string()).collect(),
 		parts,
 	}
