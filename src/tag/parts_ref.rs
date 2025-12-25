@@ -3,10 +3,18 @@ use crate::tag::{PartRef, TagElemRef};
 /// Result of extracting data and parts from input as references.
 #[derive(Debug, PartialEq, Default)]
 pub struct PartsRef<'a> {
-	pub parts: Vec<PartRef<'a>>,
+	pub(crate) parts: Vec<PartRef<'a>>,
 }
 
 impl<'a> PartsRef<'a> {
+	pub fn parts(&self) -> &Vec<PartRef<'a>> {
+		&self.parts
+	}
+
+	pub fn into_parts(self) -> Vec<PartRef<'a>> {
+		self.parts
+	}
+
 	/// Returns the unique tag names found in the parts.
 	pub fn tag_names(&self) -> Vec<&str> {
 		let mut names = Vec::new();
@@ -62,5 +70,11 @@ impl<'a, 'b> IntoIterator for &'b PartsRef<'a> {
 
 	fn into_iter(self) -> Self::IntoIter {
 		self.parts.iter()
+	}
+}
+
+impl<'a> From<PartsRef<'a>> for Vec<PartRef<'a>> {
+	fn from(val: PartsRef<'a>) -> Self {
+		val.parts
 	}
 }

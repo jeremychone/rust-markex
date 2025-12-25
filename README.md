@@ -23,7 +23,7 @@ fn main() -> Result<()> {
     
     let extracted_data = tag::extract(input, &["MY_TAG"], true); 
     
-    for part in extracted_data.parts {
+    for part in extracted_data {
         match part {
             Part::Text(t) => println!("Text: {t:?}"),
             Part::TagElem(e) => println!("TagElem: {} ({})", e.tag, e.content),

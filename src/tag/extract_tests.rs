@@ -17,17 +17,17 @@ fn test_tag_parser_simple_with_text() -> Result<()> {
 
 	// -- Check
 	assert_eq!(result.tag_names(), vec!["DATA"]);
-	assert_eq!(result.parts.len(), 3);
-	assert_eq!(result.parts[0], Part::Text("Before ".to_string()));
+	assert_eq!(result.parts().len(), 3);
+	assert_eq!(result.parts()[0], Part::Text("Before ".to_string()));
 	assert_eq!(
-		result.parts[1],
+		result.parts()[1],
 		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: None,
 			content: "content".to_string(),
 		})
 	);
-	assert_eq!(result.parts[2], Part::Text(" After".to_string()));
+	assert_eq!(result.parts()[2], Part::Text(" After".to_string()));
 
 	Ok(())
 }
@@ -42,9 +42,9 @@ fn test_tag_parser_simple_without_text() -> Result<()> {
 	let result = extract(input, &tag_names, false);
 
 	// -- Check
-	assert_eq!(result.parts.len(), 1);
+	assert_eq!(result.parts().len(), 1);
 	assert_eq!(
-		result.parts[0],
+		result.parts()[0],
 		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: None,
@@ -65,14 +65,14 @@ fn test_tag_parser_multiple_tags_with_attrs() -> Result<()> {
 	let result = extract(input, &tag_names, true);
 
 	// -- Check
-	assert_eq!(result.parts.len(), 5);
+	assert_eq!(result.parts().len(), 5);
 
-	assert_eq!(result.parts[0], Part::Text("Start ".to_string()));
+	assert_eq!(result.parts()[0], Part::Text("Start ".to_string()));
 
 	let mut file_attrs = HashMap::new();
 	file_attrs.insert("path".to_string(), "a.txt".to_string());
 	assert_eq!(
-		result.parts[1],
+		result.parts()[1],
 		Part::TagElem(TagElem {
 			tag: "FILE".to_string(),
 			attrs: Some(file_attrs),
@@ -80,12 +80,12 @@ fn test_tag_parser_multiple_tags_with_attrs() -> Result<()> {
 		})
 	);
 
-	assert_eq!(result.parts[2], Part::Text(" middle ".to_string()));
+	assert_eq!(result.parts()[2], Part::Text(" middle ".to_string()));
 
 	let mut data_attrs = HashMap::new();
 	data_attrs.insert("id".to_string(), "123".to_string());
 	assert_eq!(
-		result.parts[3],
+		result.parts()[3],
 		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: Some(data_attrs),
@@ -93,7 +93,7 @@ fn test_tag_parser_multiple_tags_with_attrs() -> Result<()> {
 		})
 	);
 
-	assert_eq!(result.parts[4], Part::Text(" end".to_string()));
+	assert_eq!(result.parts()[4], Part::Text(" end".to_string()));
 
 	Ok(())
 }
@@ -109,13 +109,13 @@ fn test_tag_parser_no_tags() -> Result<()> {
 	let result_without_text = extract(input, &tag_names, false);
 
 	// -- Check
-	assert_eq!(result_with_text.parts.len(), 1);
+	assert_eq!(result_with_text.parts().len(), 1);
 	assert_eq!(
-		result_with_text.parts[0],
+		result_with_text.parts()[0],
 		Part::Text("Just plain text without any tags.".to_string())
 	);
 
-	assert!(result_without_text.parts.is_empty());
+	assert!(result_without_text.parts().is_empty());
 
 	Ok(())
 }
@@ -130,7 +130,7 @@ fn test_tag_parser_empty_input() -> Result<()> {
 	let result = extract(input, &tag_names, true);
 
 	// -- Check
-	assert!(result.parts.is_empty());
+	assert!(result.parts().is_empty());
 
 	Ok(())
 }
@@ -145,9 +145,9 @@ fn test_tag_parser_only_tag() -> Result<()> {
 	let result = extract(input, &tag_names, true);
 
 	// -- Check
-	assert_eq!(result.parts.len(), 1);
+	assert_eq!(result.parts().len(), 1);
 	assert_eq!(
-		result.parts[0],
+		result.parts()[0],
 		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: None,
@@ -168,9 +168,9 @@ fn test_tag_parser_adjacent_tags() -> Result<()> {
 	let result = extract(input, &tag_names, true);
 
 	// -- Check
-	assert_eq!(result.parts.len(), 2);
+	assert_eq!(result.parts().len(), 2);
 	assert_eq!(
-		result.parts[0],
+		result.parts()[0],
 		Part::TagElem(TagElem {
 			tag: "A".to_string(),
 			attrs: None,
@@ -178,7 +178,7 @@ fn test_tag_parser_adjacent_tags() -> Result<()> {
 		})
 	);
 	assert_eq!(
-		result.parts[1],
+		result.parts()[1],
 		Part::TagElem(TagElem {
 			tag: "B".to_string(),
 			attrs: None,

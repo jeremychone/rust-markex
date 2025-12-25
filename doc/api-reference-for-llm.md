@@ -55,24 +55,27 @@ pub enum Part {
 #### Function `extract`
 
 ```rust
-pub fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> ExtractedData
+pub fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> Parts
 ```
 Parses `input` searching for balanced tags defined in `tag_names`.
 - If `capture_text` is true, returns all input fragments (`Part::Text` and `Part::TagElem`).
 - If false, only returns `Part::TagElem`.
 
-#### Struct `ExtractedData`
+#### Struct `Parts`
 
-The result structure returned by `parse()`.
+The result structure returned by `extract()`.
 
 ```rust
-pub struct ExtractedData {
-	pub tag_names: Vec<String>,
-	pub parts: Vec<Part>,
+pub struct Parts {
+	// ... internal fields
 }
 ```
-**Methods on `ExtractedData` (use `use markex::tag::ExtractedData;`):**
 
+**Methods on `Parts` (use `use markex::tag::Parts;`):**
+
+- `pub fn parts(&self) -> &Vec<Part>`: Returns references to all parts.
+- `pub fn into_parts(self) -> Vec<Part>`: Consumes `self` and returns the vector of parts.
+- `pub fn tag_names(&self) -> Vec<&str>`: Returns unique tag names found.
 - `pub fn tag_elems(&self) -> Vec<&TagElem>`: Returns references to all extracted `TagElem`s.
 - `pub fn into_tag_elems(self) -> Vec<TagElem>`: Consumes `self`, returns all `TagElem`s.
 - `pub fn texts(&self) -> Vec<&String>`: Returns references to all text fragments.
@@ -118,7 +121,7 @@ fn main() -> Result<()> {
     // 2. Detailed parsing using extract() to capture all fragments
     let extracted_data = extract(input, &[tag_name], true); 
     
-    for part in extracted_data.parts {
+    for part in extracted_data {
         match part {
             Part::Text(t) => println!("Text: {t:?}"),
             Part::TagElem(e) => println!("TagElem: {e.tag} ({e.content})"),

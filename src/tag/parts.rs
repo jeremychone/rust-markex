@@ -24,10 +24,18 @@ impl<'a> From<crate::tag::PartRef<'a>> for Part {
 /// Result of extracting data and parts from input.
 #[derive(Debug, Serialize, Clone, PartialEq, Default)]
 pub struct Parts {
-	pub parts: Vec<Part>,
+	pub(crate) parts: Vec<Part>,
 }
 
 impl Parts {
+	pub fn parts(&self) -> &Vec<Part> {
+		&self.parts
+	}
+
+	pub fn into_parts(self) -> Vec<Part> {
+		self.parts
+	}
+
 	/// Returns the unique tag names found in the parts.
 	pub fn tag_names(&self) -> Vec<&str> {
 		let mut names = Vec::new();
@@ -120,5 +128,11 @@ impl<'a> IntoIterator for &'a Parts {
 
 	fn into_iter(self) -> Self::IntoIter {
 		self.parts.iter()
+	}
+}
+
+impl From<Parts> for Vec<Part> {
+	fn from(val: Parts) -> Self {
+		val.parts
 	}
 }
