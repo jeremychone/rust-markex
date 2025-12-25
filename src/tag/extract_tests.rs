@@ -16,7 +16,7 @@ fn test_tag_parser_simple_with_text() -> Result<()> {
 	let result = extract(input, &tag_names, true);
 
 	// -- Check
-	assert_eq!(result.tag_names, vec!["DATA".to_string()]);
+	assert_eq!(result.tag_names(), vec!["DATA"]);
 	assert_eq!(result.parts.len(), 3);
 	assert_eq!(result.parts[0], Part::Text("Before ".to_string()));
 	assert_eq!(

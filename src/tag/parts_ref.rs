@@ -1,13 +1,29 @@
 use crate::tag::{PartRef, TagElemRef};
 
 /// Result of extracting data and parts from input as references.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct PartsRef<'a> {
-	pub tag_names: Vec<String>,
 	pub parts: Vec<PartRef<'a>>,
 }
 
 impl<'a> PartsRef<'a> {
+	/// Returns the unique tag names found in the parts.
+	pub fn tag_names(&self) -> Vec<&str> {
+		let mut names = Vec::new();
+		for part in &self.parts {
+			if let PartRef::TagElemRef(elem) = part {
+				if !names.contains(&elem.tag_name) {
+					names.push(elem.tag_name);
+				}
+			}
+		}
+		names
+	}
+
+	pub fn iter(&self) -> std::slice::Iter<'_, PartRef<'a>> {
+		self.parts.iter()
+	}
+
 	/// Returns references to all `TagElemRef` items in the parsed data.
 	pub fn tag_elems(&self) -> Vec<&TagElemRef<'a>> {
 		self.parts
@@ -28,5 +44,23 @@ impl<'a> PartsRef<'a> {
 				PartRef::TagElemRef(_) => None,
 			})
 			.collect()
+	}
+}
+
+impl<'a> IntoIterator for PartsRef<'a> {
+	type Item = PartRef<'a>;
+	type IntoIter = std::vec::IntoIter<Self::Item>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.parts.into_iter()
+	}
+}
+
+impl<'a, 'b> IntoIterator for &'b PartsRef<'a> {
+	type Item = &'b PartRef<'a>;
+	type IntoIter = std::slice::Iter<'b, PartRef<'a>>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.parts.iter()
 	}
 }

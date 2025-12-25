@@ -17,10 +17,7 @@ pub fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> Parts {
 	let iter = TagIter::new(input, tag_names, capture_text);
 	let parts = iter.collect();
 
-	Parts {
-		tag_names: tag_names.iter().map(|s| s.to_string()).collect(),
-		parts,
-	}
+	Parts { parts }
 }
 
 /// Parses the input string for the specified tag names and returns references.
@@ -28,10 +25,7 @@ pub fn extract_refs<'a>(input: &'a str, tag_names: &[&str], capture_text: bool) 
 	let iter = TagRefIter::new(input, tag_names, capture_text);
 	let parts = iter.collect();
 
-	PartsRef {
-		tag_names: tag_names.iter().map(|s| s.to_string()).collect(),
-		parts,
-	}
+	PartsRef { parts }
 }
 
 // region:    --- Tests

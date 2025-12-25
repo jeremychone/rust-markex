@@ -24,11 +24,27 @@ impl<'a> From<crate::tag::PartRef<'a>> for Part {
 /// Result of extracting data and parts from input.
 #[derive(Debug, Serialize, Clone, PartialEq, Default)]
 pub struct Parts {
-	pub tag_names: Vec<String>,
 	pub parts: Vec<Part>,
 }
 
 impl Parts {
+	/// Returns the unique tag names found in the parts.
+	pub fn tag_names(&self) -> Vec<&str> {
+		let mut names = Vec::new();
+		for part in &self.parts {
+			if let Part::TagElem(elem) = part {
+				if !names.contains(&elem.tag.as_str()) {
+					names.push(elem.tag.as_str());
+				}
+			}
+		}
+		names
+	}
+
+	pub fn iter(&self) -> std::slice::Iter<'_, Part> {
+		self.parts.iter()
+	}
+
 	/// Returns references to all `TagElem` items in the parsed data.
 	pub fn tag_elems(&self) -> Vec<&TagElem> {
 		self.parts
@@ -86,5 +102,23 @@ impl Parts {
 		}
 
 		(tag_elems, text_content)
+	}
+}
+
+impl IntoIterator for Parts {
+	type Item = Part;
+	type IntoIter = std::vec::IntoIter<Self::Item>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.parts.into_iter()
+	}
+}
+
+impl<'a> IntoIterator for &'a Parts {
+	type Item = &'a Part;
+	type IntoIter = std::slice::Iter<'a, Part>;
+
+	fn into_iter(self) -> Self::IntoIter {
+		self.parts.iter()
 	}
 }
