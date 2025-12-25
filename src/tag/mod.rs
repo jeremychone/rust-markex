@@ -2,7 +2,8 @@
 
 // region:    --- Modules
 
-mod attrs_parser;
+mod support;
+
 mod extract;
 mod tag_elem;
 mod tag_elem_iter;

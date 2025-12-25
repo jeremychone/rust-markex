@@ -1,6 +1,6 @@
 //! Parser module for extracting tag elements and text fragments from input.
 
-use super::attrs_parser::parse_attribute;
+use super::support::parse_attribute;
 use super::tag_elem::{Part, TagElem};
 use super::tag_elem_ref_iter::{PartRef, TagElemRefIterator};
 use serde::Serialize;

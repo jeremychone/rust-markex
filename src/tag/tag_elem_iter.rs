@@ -1,8 +1,8 @@
 //! Iterator to extract structured `TagElem`s including content and parsed attributes.
 
-use super::{Part, TagElem, TagElemRefIterator};
-use super::attrs_parser::parse_attribute;
+use super::support::parse_attribute;
 use super::tag_elem_ref_iter::PartRef;
+use super::{Part, TagElem, TagElemRefIterator};
 
 /// Iterator that yields owned `Part` instances (`Text` or `TagElem`), found within a text
 /// based on specific tag names.

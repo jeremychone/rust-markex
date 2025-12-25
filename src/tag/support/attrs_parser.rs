@@ -6,7 +6,7 @@ use std::collections::HashMap;
 /// Flag attributes (key without value) are stored with an empty string value.
 ///
 /// Examples: `path="a/b.txt" id=123 flag`
-pub(super) fn parse_attribute(attrs_raw: Option<&str>) -> Option<HashMap<String, String>> {
+pub fn parse_attribute(attrs_raw: Option<&str>) -> Option<HashMap<String, String>> {
 	let raw = attrs_raw?.trim();
 	if raw.is_empty() {
 		return None;
