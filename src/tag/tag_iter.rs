@@ -1,17 +1,17 @@
 //! Iterator to extract structured `TagElem`s including content and parsed attributes.
 
 use super::support::parse_attribute;
-use super::tag_elem_ref_iter::PartRef;
+use super::tag_ref_iter::PartRef;
 use super::{Part, TagElem, TagElemRefIterator};
 
 /// Iterator that yields owned `Part` instances (`Text` or `TagElem`), found within a text
 /// based on specific tag names.
 /// It consumes the referenced elements from `TagElemRefIterator` and converts them to owned types.
-pub struct TagElemIter<'a> {
+pub struct TagIter<'a> {
 	tag_content_iter: TagElemRefIterator<'a>,
 }
 
-impl<'a> TagElemIter<'a> {
+impl<'a> TagIter<'a> {
 	/// Creates a new `TagElemIter`.
 	///
 	/// # Arguments
@@ -40,7 +40,7 @@ impl<'a> TagElemIter<'a> {
 	}
 }
 
-impl Iterator for TagElemIter<'_> {
+impl Iterator for TagIter<'_> {
 	type Item = Part;
 
 	fn next(&mut self) -> Option<Self::Item> {
@@ -57,7 +57,7 @@ impl Iterator for TagElemIter<'_> {
 
 // region:    --- Tests
 
-#[path = "tag_elem_iter_tests.rs"]
+#[path = "tag_iter_tests.rs"]
 #[cfg(test)]
 mod tests;
 

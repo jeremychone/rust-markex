@@ -241,7 +241,7 @@ impl<'a> Iterator for TagElemRefIterator<'a> {
 
 // region:    --- Tests
 
-#[path = "tag_elem_ref_iter_tests.rs"]
+#[path = "tag_ref_iter_tests.rs"]
 #[cfg(test)]
 mod tests;
 

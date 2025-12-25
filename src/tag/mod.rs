@@ -5,14 +5,17 @@
 mod support;
 
 mod extract;
-mod tag_elem;
-mod tag_elem_iter;
-mod tag_elem_ref_iter;
+mod extracted_data;
+#[allow(clippy::module_inception)]
+mod tag;
+mod tag_iter;
+mod tag_ref_iter;
 
-use tag_elem_ref_iter::TagElemRefIterator;
+use tag_ref_iter::TagElemRefIterator;
 
-pub use extract::{ExtractedData, extract};
-pub use tag_elem::*;
-pub use tag_elem_iter::*;
+pub use extract::extract;
+pub use extracted_data::ExtractedData;
+pub use tag::*;
+pub use tag_iter::*;
 
 // endregion: --- Modules

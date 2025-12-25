@@ -1,6 +1,6 @@
 //! Tests for the TagElemIter.
 
-use crate::tag::{Part, TagElem, TagElemIter};
+use crate::tag::{Part, TagElem, TagIter};
 use std::collections::HashMap;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -12,7 +12,7 @@ fn test_support_tag_elem_iter_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagElemIter::new_single_tag(text, tag_name, true).collect();
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 5);
@@ -46,7 +46,7 @@ fn test_support_tag_elem_iter_with_attrs() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagElemIter::new_single_tag(text, tag_name, true).collect();
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 2);
@@ -77,7 +77,7 @@ fn test_support_tag_elem_iter_no_tags() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagElemIter::new_single_tag(text, tag_name, true).collect();
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -93,7 +93,7 @@ fn test_support_tag_elem_iter_multiple_tag_names() -> Result<()> {
 	let tag_names = ["ONE", "TWO"];
 
 	// -- Exec
-	let parts: Vec<Part> = TagElemIter::new(text, &tag_names, true).collect();
+	let parts: Vec<Part> = TagIter::new(text, &tag_names, true).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 5);
