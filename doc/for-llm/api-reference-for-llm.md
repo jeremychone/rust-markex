@@ -51,7 +51,7 @@ pub enum Part {
 ```rust
 pub struct TagElemRef<'a> {
     pub tag_name: &'a str,
-    pub attrs_raw: Option<&'a str>,
+    pub attrs: Option<HashMap<&'a str, &'a str>>,
     pub content: &'a str,
     pub start_idx: usize,
     pub end_idx: usize,
