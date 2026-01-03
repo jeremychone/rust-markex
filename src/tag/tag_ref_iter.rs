@@ -2,6 +2,7 @@
 
 // region:    --- Types
 
+use crate::tag::support::parse_attrs_ref;
 use crate::tag::TagElemRef;
 
 /// Represents a part of parsed content as a reference, either plain text or a tag element reference.
@@ -132,12 +133,7 @@ impl<'a> TagRefIter<'a> {
 
 			// --- Extract Parameters ---
 			let attrs_section = &self.input[after_prefix_idx..open_tag_end_idx];
-			let attrs_raw_str = attrs_section.trim();
-			let attrs_raw = if attrs_raw_str.is_empty() {
-				None
-			} else {
-				Some(attrs_raw_str)
-			}; // Keep attrs referencing the original input slice.
+			let attrs = parse_attrs_ref(Some(attrs_section));
 
 			// --- Find the closing tag ---
 			let search_after_open_tag_idx = open_tag_end_idx + 1;
@@ -163,7 +159,7 @@ impl<'a> TagRefIter<'a> {
 			// --- Return the found item ---
 			return Some(TagElemRef {
 				tag_name,
-				attrs_raw,
+				attrs,
 				content,
 				start_idx,
 				end_idx,

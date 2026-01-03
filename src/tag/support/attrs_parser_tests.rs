@@ -1,6 +1,7 @@
 //! Tests for the attribute parsing logic in `attrs_parser.rs`.
 
-use super::parse_attribute;
+use crate::tag::support::parse_attrs_ref;
+
 use std::collections::HashMap;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -18,6 +19,25 @@ fn test_support_tag_attrs_parser_simple() -> Result<()> {
 	expected.insert("path".to_string(), "a/b.txt".to_string());
 	expected.insert("id".to_string(), "123".to_string());
 	expected.insert("flag".to_string(), "".to_string());
+
+	assert_eq!(parsed, Some(expected));
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_attrs_parser_ref_simple() -> Result<()> {
+	// -- Setup & Fixtures
+	let raw = r#"path="a/b.txt" id=123 flag"#;
+
+	// -- Exec
+	let parsed = parse_attrs_ref(Some(raw));
+
+	// -- Check
+	let mut expected = HashMap::new();
+	expected.insert("path", "a/b.txt");
+	expected.insert("id", "123");
+	expected.insert("flag", "");
 
 	assert_eq!(parsed, Some(expected));
 
@@ -60,3 +80,19 @@ fn test_support_tag_attrs_parser_none_or_empty() -> Result<()> {
 
 	Ok(())
 }
+
+// region:    --- Support
+
+/// Parses a raw string of attributes (key=value pairs) into a HashMap of owned strings.
+///
+/// Supports unquoted values, single-quoted values, and double-quoted values.
+/// Flag attributes (key without value) are stored with an empty string value.
+///
+/// Examples: `path="a/b.txt" id=123 flag`
+pub fn parse_attribute(attrs_raw: Option<&str>) -> Option<HashMap<String, String>> {
+	let refs = parse_attrs_ref(attrs_raw)?;
+	let owned = refs.into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
+	Some(owned)
+}
+
+// endregion: --- Support

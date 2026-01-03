@@ -1,84 +1,53 @@
 use std::collections::HashMap;
 
-/// Parses a raw string of attributes (key=value pairs) into a HashMap.
-///
-/// Supports unquoted values, single-quoted values, and double-quoted values.
-/// Flag attributes (key without value) are stored with an empty string value.
-///
-/// Examples: `path="a/b.txt" id=123 flag`
-pub fn parse_attribute(attrs_raw: Option<&str>) -> Option<HashMap<String, String>> {
+/// Parses a raw string of attributes (key=value pairs) into a HashMap of references.
+pub fn parse_attrs_ref(attrs_raw: Option<&str>) -> Option<HashMap<&str, &str>> {
 	let raw = attrs_raw?.trim();
 	if raw.is_empty() {
 		return None;
 	}
 
-	let chars: Vec<char> = raw.chars().collect();
-	let len = chars.len();
-	let mut idx = 0;
 	let mut attrs = HashMap::new();
+	let mut current = raw;
 
-	while idx < len {
-		while idx < len && chars[idx].is_whitespace() {
-			idx += 1;
-		}
-		if idx >= len {
+	while !current.is_empty() {
+		current = current.trim_start();
+		if current.is_empty() {
 			break;
 		}
 
-		let key_start = idx;
-		while idx < len && !chars[idx].is_whitespace() && chars[idx] != '=' {
-			idx += 1;
-		}
+		// Find key
+		let key_end = current.find(|c: char| c.is_whitespace() || c == '=').unwrap_or(current.len());
+		let key = &current[..key_end];
+		current = &current[key_end..].trim_start();
 
-		if key_start == idx {
-			idx += 1;
-			continue;
-		}
-
-		let key: String = chars[key_start..idx].iter().collect();
-		let key = key.trim();
-		if key.is_empty() {
-			continue;
-		}
-		let key = key.to_string();
-
-		while idx < len && chars[idx].is_whitespace() {
-			idx += 1;
-		}
-
-		let mut value = String::new();
-
-		if idx < len && chars[idx] == '=' {
-			idx += 1;
-
-			while idx < len && chars[idx].is_whitespace() {
-				idx += 1;
-			}
-
-			if idx < len {
-				let current = chars[idx];
-				if current == '"' || current == '\'' {
-					let quote = current;
-					idx += 1;
-					let value_start = idx;
-					while idx < len && chars[idx] != quote {
-						idx += 1;
-					}
-					value = chars[value_start..idx].iter().collect();
-					if idx < len {
-						idx += 1;
+		let mut value = "";
+		if current.starts_with('=') {
+			current = &current[1..].trim_start();
+			if !current.is_empty() {
+				let first_char = current.chars().next().unwrap();
+				if first_char == '"' || first_char == '\'' {
+					let quote = first_char;
+					current = &current[1..];
+					if let Some(val_end) = current.find(quote) {
+						value = &current[..val_end];
+						current = &current[val_end + 1..];
+					} else {
+						// Unclosed quote, take rest as value
+						value = current;
+						current = "";
 					}
 				} else {
-					let value_start = idx;
-					while idx < len && !chars[idx].is_whitespace() {
-						idx += 1;
-					}
-					value = chars[value_start..idx].iter().collect();
+					let val_end = current.find(|c: char| c.is_whitespace()).unwrap_or(current.len());
+					value = &current[..val_end];
+					current = &current[val_end..];
 				}
 			}
 		}
 
-		attrs.insert(key, value);
+		if !key.is_empty() {
+			attrs.insert(key, value);
+		}
 	}
 
 	if attrs.is_empty() { None } else { Some(attrs) }

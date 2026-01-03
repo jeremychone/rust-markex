@@ -1,6 +1,7 @@
 //! Tests for the TagContentIterator.
 
 use super::{PartRef, TagElemRef, TagRefIter};
+use std::collections::HashMap;
 use std::error::Error;
 // For tests, using a simple Result alias is often sufficient.
 type Result<T> = core::result::Result<T, Box<dyn Error>>;
@@ -29,11 +30,12 @@ fn test_support_tag_content_iter_simple() -> Result<()> {
 
 	// -- Check
 	assert_eq!(tags.len(), 1);
+
 	assert_eq!(
 		tags[0],
 		TagElemRef {
 			tag_name: "DATA",
-			attrs_raw: None,
+			attrs: None,
 			content: "content",
 			start_idx: 10,
 			end_idx: 29,
@@ -55,11 +57,16 @@ fn test_support_tag_content_iter_attrs() -> Result<()> {
 
 	// -- Check
 	assert_eq!(tags.len(), 1);
+
+	let mut expected_attrs = HashMap::new();
+	expected_attrs.insert("path", "a/b.txt");
+	expected_attrs.insert("id", "123");
+
 	assert_eq!(
 		tags[0],
 		TagElemRef {
 			tag_name: "FILE",
-			attrs_raw: Some(r#"path="a/b.txt" id=123"#),
+			attrs: Some(expected_attrs),
 			content: "File Content",
 			start_idx: 7,
 			end_idx: 53,
@@ -81,11 +88,16 @@ fn test_support_tag_content_iter_attrs_with_newline() -> Result<()> {
 
 	// -- Check
 	assert_eq!(tags.len(), 1);
+
+	let mut expected_attrs = HashMap::new();
+	expected_attrs.insert("path", "a/b.txt");
+	expected_attrs.insert("id", "123");
+
 	assert_eq!(
 		tags[0],
 		TagElemRef {
 			tag_name: "FILE",
-			attrs_raw: Some("path=\"a/b.txt\"\n id=123"), // Note: .trim() removes leading/trailing whitespace only
+			attrs: Some(expected_attrs),
 			content: "File Content",
 			start_idx: 7,
 			end_idx: 55,
@@ -111,20 +123,24 @@ fn test_support_tag_content_iter_multiple() -> Result<()> {
 		tags[0],
 		TagElemRef {
 			tag_name: "ITEM",
-			attrs_raw: None,
+			attrs: None,
 			content: "one",
 			start_idx: 6,
 			end_idx: 21,
 		}
 	);
+
+	let mut expected_attrs = HashMap::new();
+	expected_attrs.insert("key", "val");
+
 	assert_eq!(
 		tags[1],
 		TagElemRef {
 			tag_name: "ITEM",
-			attrs_raw: Some("key=val"),
+			attrs: Some(expected_attrs),
 			content: "two",
-			start_idx: 24, // Corrected from 23 based on error
-			end_idx: 47,   // Corrected from 45 based on error
+			start_idx: 24,
+			end_idx: 47,
 		}
 	);
 
@@ -163,7 +179,7 @@ fn test_support_tag_content_iter_empty_content() -> Result<()> {
 		tags[0],
 		TagElemRef {
 			tag_name: "EMPTY",
-			attrs_raw: None,
+			attrs: None,
 			content: "",
 			start_idx: 0,
 			end_idx: 14,
@@ -189,7 +205,7 @@ fn test_support_tag_content_iter_nested_like() -> Result<()> {
 		tags_outer[0],
 		TagElemRef {
 			tag_name: "OUTER",
-			attrs_raw: None,
+			attrs: None,
 			content: "outer <INNER>inner</INNER> outer",
 			start_idx: 0,
 			end_idx: 46,
@@ -205,7 +221,7 @@ fn test_support_tag_content_iter_nested_like() -> Result<()> {
 		tags_inner[0],
 		TagElemRef {
 			tag_name: "INNER",
-			attrs_raw: None,
+			attrs: None,
 			content: "inner",
 			start_idx: 13,
 			end_idx: 32,
@@ -265,7 +281,7 @@ fn test_support_tag_content_iter_edges() -> Result<()> {
 		tags_start[0],
 		TagElemRef {
 			tag_name: "START",
-			attrs_raw: None,
+			attrs: None,
 			content: "at start",
 			start_idx: 0,
 			end_idx: 22,
@@ -281,10 +297,10 @@ fn test_support_tag_content_iter_edges() -> Result<()> {
 		tags_end[0],
 		TagElemRef {
 			tag_name: "END",
-			attrs_raw: None,
+			attrs: None,
 			content: "at end",
 			start_idx: 29,
-			end_idx: 45, // Corrected from 46 based on error
+			end_idx: 45,
 		}
 	);
 
@@ -323,7 +339,7 @@ fn test_support_tag_content_iter_tag_name_prefix_check() -> Result<()> {
 		tags[0],
 		TagElemRef {
 			tag_name: "TAG",
-			attrs_raw: None,
+			attrs: None,
 			content: "real",
 			start_idx: 28,
 			end_idx: 42,
@@ -349,17 +365,21 @@ fn test_support_tag_content_iter_multiple_tag_names() -> Result<()> {
 		tags[0],
 		TagElemRef {
 			tag_name: "ONE",
-			attrs_raw: None,
+			attrs: None,
 			content: "first",
 			start_idx: 6,
 			end_idx: 21,
 		}
 	);
+
+	let mut expected_attrs = HashMap::new();
+	expected_attrs.insert("attr", "ok");
+
 	assert_eq!(
 		tags[1],
 		TagElemRef {
 			tag_name: "TWO",
-			attrs_raw: Some("attr=ok"),
+			attrs: Some(expected_attrs),
 			content: "second",
 			start_idx: 28,
 			end_idx: 52,
