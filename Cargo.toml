@@ -1,6 +1,6 @@
 [package]
 name = "markex"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5-WIP"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "Fast, non-validating markup element extractor (Tag Element, MdRef, MdCodeBlock, MDSection)"
