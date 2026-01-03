@@ -2,8 +2,8 @@
 
 // region:    --- Types
 
-use crate::tag::support::parse_attrs_ref;
 use crate::tag::TagElemRef;
+use crate::tag::support::parse_attrs_ref;
 
 /// Represents a part of parsed content as a reference, either plain text or a tag element reference.
 #[derive(Debug, PartialEq)]

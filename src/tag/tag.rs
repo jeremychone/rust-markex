@@ -30,19 +30,12 @@ impl From<crate::tag::TagElemRef<'_>> for TagElem {
 	fn from(tag_ref: crate::tag::TagElemRef<'_>) -> Self {
 		TagElem {
 			tag: tag_ref.tag_name.to_string(),
-			attrs: tag_ref.attrs.map(|attrs| {
-				attrs
-					.into_iter()
-					.map(|(k, v)| (k.to_string(), v.to_string()))
-					.collect()
-			}),
+			attrs: tag_ref
+				.attrs
+				.map(|attrs| attrs.into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()),
 			content: tag_ref.content.to_string(),
 		}
 	}
 }
 
 // endregion: --- TagElem
-
-// region:    --- TagElemRef
-
-// endregion: --- TagElemRef
