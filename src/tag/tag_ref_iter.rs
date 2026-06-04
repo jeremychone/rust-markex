@@ -104,7 +104,7 @@ impl<'a> TagRefIter<'a> {
 
 			// --- Validate character after prefix (must be '>' or whitespace) ---
 			match self.input.as_bytes().get(after_prefix_idx) {
-				Some(b'>') | Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') => {
+				Some(b'/') | Some(b'>') | Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r') => {
 					// Potential match, proceed
 				}
 				_ => {
@@ -131,9 +131,29 @@ impl<'a> TagRefIter<'a> {
 			let tag_name_len = tag_info.name.len();
 			let tag_name = &self.input[start_idx + 1..start_idx + 1 + tag_name_len];
 
-			// --- Extract Parameters ---
-			let attrs_section = &self.input[after_prefix_idx..open_tag_end_idx];
+			// --- Check for self-closing tag ---
+			let self_closing = open_tag_end_idx > 0 && self.input.as_bytes()[open_tag_end_idx - 1] == b'/';
+
+			// --- Extract Parameters (exclude self-closing slash) ---
+			let attrs_section = if self_closing {
+				&self.input[after_prefix_idx..open_tag_end_idx - 1]
+			} else {
+				&self.input[after_prefix_idx..open_tag_end_idx]
+			};
 			let attrs = parse_attrs_ref(Some(attrs_section));
+
+			if self_closing {
+				// Self-closing: no content, no closing tag search
+				let end_idx = open_tag_end_idx;
+				self.current_pos = end_idx + 1;
+				return Some(TagElemRef {
+					tag_name,
+					attrs,
+					content: "",
+					start_idx,
+					end_idx,
+				});
+			}
 
 			// --- Find the closing tag ---
 			let search_after_open_tag_idx = open_tag_end_idx + 1;

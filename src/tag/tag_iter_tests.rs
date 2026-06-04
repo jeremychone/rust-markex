@@ -126,3 +126,78 @@ fn test_support_tag_elem_iter_multiple_tag_names() -> Result<()> {
 
 	Ok(())
 }
+
+// region:    --- Self-closing tag tests
+
+#[test]
+fn test_support_tag_elem_iter_self_closing_simple() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "<DATA/>";
+	let tag_name = "DATA";
+
+	// -- Exec
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
+
+	// -- Check
+	assert_eq!(parts.len(), 1);
+	assert_eq!(
+		parts[0],
+		Part::TagElem(TagElem {
+			tag: "DATA".to_string(),
+			attrs: None,
+			content: "".to_string(),
+		})
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_elem_iter_self_closing_with_attrs() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = r#"<FILE path="a/b.txt" id=123 />"#;
+	let tag_name = "FILE";
+
+	// -- Exec
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
+
+	// -- Check
+	assert_eq!(parts.len(), 1);
+
+	let mut expected_attrs = HashMap::new();
+	expected_attrs.insert("path".to_string(), "a/b.txt".to_string());
+	expected_attrs.insert("id".to_string(), "123".to_string());
+
+	assert_eq!(
+		parts[0],
+		Part::TagElem(TagElem {
+			tag: "FILE".to_string(),
+			attrs: Some(expected_attrs),
+			content: "".to_string(),
+		})
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_elem_iter_self_closing_mixed() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "alpha <X/> beta <Y>content</Y> gamma";
+	let tag_names = ["X", "Y"];
+
+	// -- Exec
+	let parts: Vec<Part> = TagIter::new(text, &tag_names, true).collect();
+
+	// -- Check
+	assert_eq!(parts.len(), 5);
+	assert_eq!(parts[0], Part::Text("alpha ".to_string()));
+	assert!(matches!(parts[1], Part::TagElem(_)));
+	assert_eq!(parts[2], Part::Text(" beta ".to_string()));
+	assert!(matches!(parts[3], Part::TagElem(_)));
+	assert_eq!(parts[4], Part::Text(" gamma".to_string()));
+
+	Ok(())
+}
+
+// endregion: --- Self-closing tag tests

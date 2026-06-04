@@ -528,3 +528,145 @@ fn test_support_tag_content_iter_partref_empty_input() -> Result<()> {
 }
 
 // endregion: --- PartRef Text Fragment Tests
+
+// region:    --- Self-closing tag tests
+
+#[test]
+fn test_support_tag_content_iter_self_closing_simple() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "<DATA/>";
+	let tag_name = "DATA";
+
+	// -- Exec
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let tags = extract_tag_elem_refs(parts);
+
+	// -- Check
+	assert_eq!(tags.len(), 1);
+	assert_eq!(
+		tags[0],
+		TagElemRef {
+			tag_name: "DATA",
+			attrs: None,
+			content: "",
+			start_idx: 0,
+			end_idx: 6,
+		}
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_content_iter_self_closing_with_attrs() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = r#"<FILE path="a/b.txt" id=123 />"#;
+	let tag_name = "FILE";
+
+	// -- Exec
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let tags = extract_tag_elem_refs(parts);
+
+	// -- Check
+	assert_eq!(tags.len(), 1);
+
+	let mut expected_attrs = HashMap::new();
+	expected_attrs.insert("path", "a/b.txt");
+	expected_attrs.insert("id", "123");
+
+	assert_eq!(
+		tags[0],
+		TagElemRef {
+			tag_name: "FILE",
+			attrs: Some(expected_attrs),
+			content: "",
+			start_idx: 0,
+			end_idx: 29,
+		}
+	);
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_content_iter_self_closing_with_surrounding_text() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "before <TAG/> after";
+	let tag_name = "TAG";
+
+	// -- Exec
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+
+	// -- Check
+	assert_eq!(parts.len(), 3);
+	assert_eq!(parts[0], PartRef::Text("before "));
+	assert!(matches!(parts[1], PartRef::TagElemRef(_)));
+	assert_eq!(parts[2], PartRef::Text(" after"));
+
+	let tag = match &parts[1] {
+		PartRef::TagElemRef(t) => t,
+		_ => panic!("expected TagElemRef"),
+	};
+	assert_eq!(tag.tag_name, "TAG");
+	assert_eq!(tag.content, "");
+	assert_eq!(tag.start_idx, 7); // start of '<TAG/>' = 7 (positions: before "before " is 7 chars, then '<' at index 7)
+	assert_eq!(tag.end_idx, 12); // end_idx of '>' is 12 (length "before <TAG/>" is 13? let's verify: "before " is 7 chars, "<TAG/>" is 6 chars, so total before " after" is 13. Indices: 0..7 "before ", 7..13 "<TAG/>". So start_idx 7, end_idx 12 (the '>'). So correct.
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_content_iter_self_closing_and_normal_mixed() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "<X/> before <Y>content</Y> after";
+	let tag_names = ["X", "Y"];
+
+	// -- Exec
+	let parts: Vec<PartRef> = TagRefIter::new(text, &tag_names, true).collect();
+	let tags = extract_tag_elem_refs(parts);
+
+	// -- Check
+	assert_eq!(tags.len(), 2);
+	assert_eq!(tags[0].tag_name, "X");
+	assert_eq!(tags[0].content, "");
+	assert_eq!(tags[1].tag_name, "Y");
+	assert_eq!(tags[1].content, "content");
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_content_iter_self_closing_only_tag() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "<TAG/>";
+	let tag_name = "TAG";
+
+	// -- Exec
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let tags = extract_tag_elem_refs(parts);
+
+	// -- Check
+	assert_eq!(tags.len(), 1);
+	assert_eq!(tags[0].content, "");
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_content_iter_self_closing_no_content_no_capture_text() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "<DATA/>";
+	let tag_name = "DATA";
+
+	// -- Exec
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], false).collect();
+	let tags = extract_tag_elem_refs(parts);
+
+	// -- Check
+	assert_eq!(tags.len(), 1);
+	assert_eq!(tags[0].content, "");
+
+	Ok(())
+}
+
+// endregion: --- Self-closing tag tests
