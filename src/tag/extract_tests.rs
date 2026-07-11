@@ -1,7 +1,7 @@
 //! Tests for the parser module.
 
-use super::extract;
-use crate::tag::{Part, TagElem};
+use super::{extract, extract_with_fence};
+use crate::tag::{Part, TagElem, TagFence, FENCE_BRACKET3};
 use std::collections::HashMap;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -282,6 +282,78 @@ fn test_tag_parser_into_with_extrude_content() -> Result<()> {
 	assert_eq!(tag_elems[1].tag, "DATA");
 	assert_eq!(tag_elems[1].content, "content2");
 	assert_eq!(text_content, "Before  middle  After");
+
+	Ok(())
+}
+
+#[test]
+fn test_tag_parser_bracket3_fence() -> Result<()> {
+	// -- Setup & Fixtures
+	let input = r#"Before [[[FILE path="a.txt"]]]file content[[[/FILE]]] after [[[DELETE path="temp.txt" /]]] end"#;
+	let tag_names = ["FILE", "DELETE"];
+
+	// -- Exec
+	let result = extract_with_fence(input, &tag_names, true, FENCE_BRACKET3);
+
+	// -- Check
+	assert_eq!(result.parts().len(), 5);
+	assert_eq!(result.parts()[0], Part::Text("Before ".to_string()));
+
+	let mut file_attrs = HashMap::new();
+	file_attrs.insert("path".to_string(), "a.txt".to_string());
+	assert_eq!(
+		result.parts()[1],
+		Part::TagElem(TagElem {
+			tag: "FILE".to_string(),
+			attrs: Some(file_attrs),
+			content: "file content".to_string(),
+		})
+	);
+
+	assert_eq!(result.parts()[2], Part::Text(" after ".to_string()));
+
+	let mut delete_attrs = HashMap::new();
+	delete_attrs.insert("path".to_string(), "temp.txt".to_string());
+	assert_eq!(
+		result.parts()[3],
+		Part::TagElem(TagElem {
+			tag: "DELETE".to_string(),
+			attrs: Some(delete_attrs),
+			content: "".to_string(),
+		})
+	);
+
+	assert_eq!(result.parts()[4], Part::Text(" end".to_string()));
+
+	Ok(())
+}
+
+#[test]
+fn test_tag_parser_custom_fence() -> Result<()> {
+	// -- Setup & Fixtures
+	let fence = TagFence {
+		name: "mustache",
+		open_delim: "{{",
+		close_delim: "}}",
+		closing_tag_prefix: "/",
+	};
+	let input = "{{DATA key=value}}payload{{/DATA}}";
+	let tag_names = ["DATA"];
+
+	// -- Exec
+	let result = extract_with_fence(input, &tag_names, false, fence);
+
+	// -- Check
+	let mut attrs = HashMap::new();
+	attrs.insert("key".to_string(), "value".to_string());
+	assert_eq!(
+		result.parts(),
+		&[Part::TagElem(TagElem {
+			tag: "DATA".to_string(),
+			attrs: Some(attrs),
+			content: "payload".to_string(),
+		})]
+	);
 
 	Ok(())
 }

@@ -1,6 +1,6 @@
 //! Parser module for extracting tag elements and text fragments from input.
 
-use crate::tag::{Parts, PartsRef, TagIter, TagRefIter};
+use crate::tag::{Parts, PartsRef, TagFence, TagIter, TagRefIter, FENCE_XML};
 
 /// Parses the input string for the specified tag names.
 ///
@@ -14,7 +14,12 @@ use crate::tag::{Parts, PartsRef, TagIter, TagRefIter};
 ///
 /// A `ExtractedData` containing the extracted parts.
 pub fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> Parts {
-	let iter = TagIter::new(input, tag_names, capture_text);
+	extract_with_fence(input, tag_names, capture_text, FENCE_XML)
+}
+
+/// Parses the input string for the specified tag names using the provided fence.
+pub fn extract_with_fence(input: &str, tag_names: &[&str], capture_text: bool, fence: TagFence) -> Parts {
+	let iter = TagIter::new_with_fence(input, tag_names, capture_text, fence);
 	let parts = iter.collect();
 
 	Parts { parts }
@@ -22,7 +27,17 @@ pub fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> Parts {
 
 /// Parses the input string for the specified tag names and returns references.
 pub fn extract_refs<'a>(input: &'a str, tag_names: &[&str], capture_text: bool) -> PartsRef<'a> {
-	let iter = TagRefIter::new(input, tag_names, capture_text);
+	extract_refs_with_fence(input, tag_names, capture_text, FENCE_XML)
+}
+
+/// Parses the input string for the specified tag names using the provided fence and returns references.
+pub fn extract_refs_with_fence<'a>(
+	input: &'a str,
+	tag_names: &[&str],
+	capture_text: bool,
+	fence: TagFence,
+) -> PartsRef<'a> {
+	let iter = TagRefIter::new_with_fence(input, tag_names, capture_text, fence);
 	let parts = iter.collect();
 
 	PartsRef { parts }

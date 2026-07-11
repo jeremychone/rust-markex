@@ -19,10 +19,10 @@ impl<'a> PartsRef<'a> {
 	pub fn tag_names(&self) -> Vec<&str> {
 		let mut names = Vec::new();
 		for part in &self.parts {
-			if let PartRef::TagElemRef(elem) = part {
-				if !names.contains(&elem.tag_name) {
-					names.push(elem.tag_name);
-				}
+			if let PartRef::TagElemRef(elem) = part
+				&& !names.contains(&elem.tag_name)
+			{
+				names.push(elem.tag_name);
 			}
 		}
 		names

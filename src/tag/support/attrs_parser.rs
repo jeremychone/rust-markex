@@ -19,11 +19,11 @@ pub fn parse_attrs_ref(attrs_raw: Option<&str>) -> Option<HashMap<&str, &str>> {
 		// Find key
 		let key_end = current.find(|c: char| c.is_whitespace() || c == '=').unwrap_or(current.len());
 		let key = &current[..key_end];
-		current = &current[key_end..].trim_start();
+		current = current[key_end..].trim_start();
 
 		let mut value = "";
 		if current.starts_with('=') {
-			current = &current[1..].trim_start();
+			current = current[1..].trim_start();
 			if !current.is_empty() {
 				let first_char = current.chars().next().unwrap();
 				if first_char == '"' || first_char == '\'' {

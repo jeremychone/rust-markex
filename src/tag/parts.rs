@@ -40,10 +40,10 @@ impl Parts {
 	pub fn tag_names(&self) -> Vec<&str> {
 		let mut names = Vec::new();
 		for part in &self.parts {
-			if let Part::TagElem(elem) = part {
-				if !names.contains(&elem.tag.as_str()) {
-					names.push(elem.tag.as_str());
-				}
+			if let Part::TagElem(elem) = part
+				&& !names.contains(&elem.tag.as_str())
+			{
+				names.push(elem.tag.as_str());
 			}
 		}
 		names
