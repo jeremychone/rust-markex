@@ -26,6 +26,7 @@ pub struct TagFence {
     pub name: &'static str,
     pub open_delim: &'static str,
     pub close_delim: &'static str,
+    pub close_delim_alts: Option<&'static [&'static str]>,
     pub closing_tag_prefix: &'static str,
 }
 ```
@@ -39,6 +40,7 @@ pub struct TagFence {
 
 - `FENCE_XML`: XML-compatible delimiters, such as `<FILE>content</FILE>`.
 - `FENCE_BRACKETS`: Triple-square-bracket delimiters, such as `[[[FILE]]]content[[[/FILE]]]`.
+`markex` includes [`tag::FENCE_XML`] and [`tag::FENCE_BRACKETS`], and applications can define their own fence values. `FENCE_BRACKETS` accepts both its canonical `]]]` closing delimiter and the tolerant `]]` fallback, including paired and self-closing forms.
 
 Pass a fence to `extract_with_fence`, `extract_refs_with_fence`, or either iterator's `new_with_fence` constructor. Self-closing tags place `closing_tag_prefix` immediately before `close_delim`, such as `<DELETE />` or `[[[DELETE /]]]`.
 
@@ -62,12 +64,15 @@ let fence = TagFence {
     name: "mustache",
     open_delim: "{{",
     close_delim: "}}",
+    close_delim_alts: None,
     closing_tag_prefix: "/",
 };
 let parts = extract_with_fence("{{DATA key=value}}payload{{/DATA}}", &["DATA"], false, fence);
 
 assert_eq!(parts.tag_elems()[0].content, "payload");
 ```
+
+`FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, so `[[[DATA]]payload[[[/DATA]]` is recognized. Custom [`TagFence`] values can opt into the same tolerant behavior with `close_delim_alts`. The canonical delimiter is preferred whenever it and an alternate begin at the same position.
 
 ### Owned Types
 

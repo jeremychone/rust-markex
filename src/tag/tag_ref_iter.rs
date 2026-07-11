@@ -1,4 +1,5 @@
 //! Iterator for extracting marked content sections like <TAG>...</TAG> from text.
+#![doc = include_str!("../../docs/rustdoc/tag/tag_ref_iter.md")]
 
 // region:    --- Types
 
@@ -22,26 +23,61 @@ pub struct TagPattern {
 	/// The opening tag prefix (e.g., "<FILE"). Used to find the start of the tag.
 	pub start_tag_prefix: String,
 	/// The closing tag structure (e.g., "</FILE>"). Used to find the end of the element.
-	pub end_tag: String,
-	/// The delimiter that ends opening and closing tags.
-	pub close_delim: String,
+	pub end_tags: Vec<String>,
+	/// The delimiters that end opening and closing tags.
+	pub close_delims: Vec<&'static str>,
 	/// The prefix between an opening delimiter and a closing tag name.
 	pub closing_tag_prefix: String,
 }
 
 impl TagPattern {
 	pub fn new(tag_name: &str, fence: TagFence) -> Self {
+		let mut close_delims = vec![fence.close_delim];
+		if let Some(close_delim_alts) = fence.close_delim_alts {
+			close_delims.extend_from_slice(close_delim_alts);
+		}
+		let end_tags = close_delims
+			.iter()
+			.map(|close_delim| {
+				format!(
+					"{}{}{tag_name}{close_delim}",
+					fence.open_delim, fence.closing_tag_prefix
+				)
+			})
+			.collect();
+
 		TagPattern {
 			name: tag_name.to_string(),
 			start_tag_prefix: format!("{}{tag_name}", fence.open_delim),
-			end_tag: format!(
-				"{}{}{tag_name}{}",
-				fence.open_delim, fence.closing_tag_prefix, fence.close_delim
-			),
-			close_delim: fence.close_delim.to_string(),
+			end_tags,
+			close_delims,
 			closing_tag_prefix: fence.closing_tag_prefix.to_string(),
 		}
 	}
+}
+
+fn find_next_match<'a>(
+	input: &str,
+	patterns: impl IntoIterator<Item = &'a str>,
+) -> Option<(usize, usize)> {
+	let mut selected = None;
+
+	for pattern in patterns {
+		if let Some(start_idx) = input.find(pattern) {
+			selected = match selected {
+				None => Some((start_idx, pattern.len())),
+				Some((existing_idx, existing_len)) => {
+					if start_idx < existing_idx || (start_idx == existing_idx && pattern.len() > existing_len) {
+						Some((start_idx, pattern.len()))
+					} else {
+						Some((existing_idx, existing_len))
+					}
+				}
+			};
+		}
+	}
+
+	selected
 }
 
 // endregion: --- Types
@@ -118,7 +154,10 @@ impl<'a> TagRefIter<'a> {
 
 			// --- Validate character after prefix (must be the closing delimiter, closing prefix, or whitespace) ---
 			let remaining_after_prefix = &self.input[after_prefix_idx..];
-			let valid_after_prefix = remaining_after_prefix.starts_with(&tag_info.close_delim)
+			let valid_after_prefix = tag_info
+				.close_delims
+				.iter()
+				.any(|close_delim| remaining_after_prefix.starts_with(close_delim))
 				|| remaining_after_prefix.starts_with(&tag_info.closing_tag_prefix)
 				|| matches!(
 					self.input.as_bytes().get(after_prefix_idx),
@@ -132,8 +171,9 @@ impl<'a> TagRefIter<'a> {
 
 			// --- Find the end of the opening tag ---
 			let remaining_from_start = &self.input[start_idx..];
-			let open_tag_end_offset = match remaining_from_start.find(&tag_info.close_delim) {
-				Some(idx) => idx,
+			let (open_tag_end_offset, close_delim_len) =
+				match find_next_match(remaining_from_start, tag_info.close_delims.iter().copied()) {
+					Some(match_info) => match_info,
 				None => {
 					// Malformed open tag (no '>'). Stop searching. Consider advancing past '<'?
 					// For simplicity, we stop here. A more robust parser might skip.
@@ -141,7 +181,7 @@ impl<'a> TagRefIter<'a> {
 				}
 			};
 			let open_tag_close_start_idx = start_idx + open_tag_end_offset;
-			let open_tag_end_idx = open_tag_close_start_idx + tag_info.close_delim.len() - 1;
+			let open_tag_end_idx = open_tag_close_start_idx + close_delim_len - 1;
 
 			let tag_name_len = tag_info.name.len();
 			let tag_name_start_idx = after_prefix_idx - tag_name_len;
@@ -173,18 +213,19 @@ impl<'a> TagRefIter<'a> {
 			}
 
 			// --- Find the closing tag ---
-			let search_after_open_tag_idx = open_tag_close_start_idx + tag_info.close_delim.len();
+			let search_after_open_tag_idx = open_tag_close_start_idx + close_delim_len;
 			if search_after_open_tag_idx >= self.input.len() {
 				// Reached end of input before finding closing tag
 				return None;
 			}
 
 			let remaining_after_open = &self.input[search_after_open_tag_idx..];
-			let close_tag_start_offset = remaining_after_open.find(&tag_info.end_tag)?;
+			let (close_tag_start_offset, close_tag_len) =
+				find_next_match(remaining_after_open, tag_info.end_tags.iter().map(String::as_str))?;
 			let close_tag_start_idx = search_after_open_tag_idx + close_tag_start_offset;
 			// Corrected end_idx calculation: it's the index of the '>' of the closing tag
 			// The end index should be the index of the last character of the closing tag '>'
-			let end_idx = close_tag_start_idx + tag_info.end_tag.len() - 1;
+			let end_idx = close_tag_start_idx + close_tag_len - 1;
 
 			// --- Extract Content ---
 			let content = &self.input[open_tag_end_idx + 1..close_tag_start_idx];

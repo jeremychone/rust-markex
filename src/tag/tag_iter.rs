@@ -1,4 +1,5 @@
 //! Iterator to extract structured `TagElem`s including content and parsed attributes.
+#![doc = include_str!("../../docs/rustdoc/tag/tag_iter.md")]
 
 use super::{Part, TagFence, TagRefIter, FENCE_XML};
 

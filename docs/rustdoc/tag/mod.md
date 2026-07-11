@@ -26,6 +26,7 @@ A [`TagFence`] describes a tag syntax with:
 
 - `open_delim`, the delimiter starting an opening or closing tag.
 - `close_delim`, the delimiter ending an opening or closing tag.
+- `close_delim_alts`, optional fallback delimiters accepted in addition to `close_delim`.
 - `closing_tag_prefix`, the prefix between `open_delim` and a closing tag name.
 - `name`, a descriptive static name for the fence.
 
@@ -36,6 +37,25 @@ use markex::tag::{self, FENCE_BRACKETS};
 
 let input = "[[[DATA]]]payload[[[/DATA]]]";
 let parts = tag::extract_with_fence(input, &["DATA"], false, FENCE_BRACKETS);
+
+assert_eq!(parts.tag_elems()[0].content, "payload");
+```
+
+`FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, including paired and self-closing tags. For example, `[[[DATA]]payload[[[/DATA]]` is valid. If its canonical `]]]` delimiter and `]]` alternate both begin at the same location, extraction uses the longer canonical delimiter.
+
+Custom fences may configure the same behavior with `close_delim_alts`. The canonical delimiter is always considered first:
+
+```rust
+use markex::tag::{self, TagFence};
+
+let fence = TagFence {
+    name: "mustache",
+    open_delim: "{{",
+    close_delim: "}}",
+    close_delim_alts: Some(&["}"]),
+    closing_tag_prefix: "/",
+};
+let parts = tag::extract_with_fence("{{DATA}payload{{/DATA}", &["DATA"], false, fence);
 
 assert_eq!(parts.tag_elems()[0].content, "payload");
 ```

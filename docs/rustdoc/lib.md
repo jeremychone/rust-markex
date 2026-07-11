@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Custom fences
 
-Use a [`tag::TagFence`] when the structured payload uses delimiters other than XML. `markex` includes [`tag::FENCE_XML`] and [`tag::FENCE_BRACKETS`], and applications can define their own fence values.
+Use a [`tag::TagFence`] when the structured payload uses delimiters other than XML. `markex` includes [`tag::FENCE_XML`] and [`tag::FENCE_BRACKETS`], and applications can define their own fence values. A fence can also accept alternate closing delimiters through [`tag::TagFence::close_delim_alts`].
 
 ```rust
 use markex::tag::{self, FENCE_BRACKETS};
@@ -64,6 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         name: "mustache",
         open_delim: "{{",
         close_delim: "}}",
+    close_delim_alts: None,
         closing_tag_prefix: "/",
     };
     let parts = tag::extract_with_fence("{{DATA}}value{{/DATA}}", &["DATA"], false, fence);
@@ -78,6 +79,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+`FENCE_BRACKETS` accepts its canonical `]]]` delimiter and the tolerant `]]` alternate. When both delimiters begin at the same position, the canonical, longer delimiter is selected.
 
 ## Owned and borrowed extraction
 

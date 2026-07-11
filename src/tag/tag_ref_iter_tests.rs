@@ -1,6 +1,7 @@
 //! Tests for the TagContentIterator.
 
 use super::{PartRef, TagElemRef, TagRefIter};
+use crate::tag::FENCE_BRACKETS;
 use std::collections::HashMap;
 use std::error::Error;
 // For tests, using a simple Result alias is often sufficient.
@@ -670,3 +671,48 @@ fn test_support_tag_content_iter_self_closing_no_content_no_capture_text() -> Re
 }
 
 // endregion: --- Self-closing tag tests
+
+#[test]
+fn test_support_tag_content_iter_bracket_fence_alternate_delimiters() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = r#"[[[FILE]]]canonical[[[/FILE]]]"#;
+
+	// -- Exec
+	let parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &["FILE"], false, FENCE_BRACKETS).collect();
+	let tags = extract_tag_elem_refs(parts);
+
+	// -- Check
+	assert_eq!(tags.len(), 1);
+	assert_eq!(tags[0].content, "canonical");
+	assert_eq!(tags[0].start_idx, 0);
+	assert_eq!(tags[0].end_idx, text.len() - 1);
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_content_iter_bracket_fence_shortened_self_closing() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = r#"[[[DELETE path="temp.txt" /]]"#;
+
+	// -- Exec
+	let parts: Vec<PartRef> =
+		TagRefIter::new_with_fence(text, &["DELETE"], false, FENCE_BRACKETS).collect();
+	let tags = extract_tag_elem_refs(parts);
+
+	// -- Check
+	assert_eq!(tags.len(), 1);
+	assert_eq!(tags[0].content, "");
+	assert_eq!(tags[0].start_idx, 0);
+	assert_eq!(tags[0].end_idx, text.len() - 1);
+	assert_eq!(
+		tags[0]
+			.attrs
+			.as_ref()
+			.and_then(|attrs| attrs.get("path"))
+			.ok_or("should extract the DELETE path attribute")?,
+		&"temp.txt"
+	);
+
+	Ok(())
+}
