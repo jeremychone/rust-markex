@@ -26,6 +26,8 @@ pub struct TagPattern {
 	pub close_delims: Vec<&'static str>,
 	/// The prefix between an opening delimiter and a closing tag name.
 	pub closing_tag_prefix: String,
+	/// The suffix that identifies a self-closing opening tag.
+	pub self_closing_suffix: String,
 }
 
 impl TagPattern {
@@ -50,6 +52,7 @@ impl TagPattern {
 			end_tags,
 			close_delims,
 			closing_tag_prefix: fence.closing_tag_prefix.to_string(),
+			self_closing_suffix: fence.self_closing_suffix.to_string(),
 		}
 	}
 }
@@ -182,11 +185,11 @@ impl<'a> TagRefIter<'a> {
 
 			// --- Check for self-closing tag ---
 			let opening_tag_body = &self.input[after_prefix_idx..open_tag_close_start_idx];
-			let self_closing = opening_tag_body.ends_with(&tag_info.closing_tag_prefix);
+			let self_closing = opening_tag_body.ends_with(&tag_info.self_closing_suffix);
 
 			// --- Extract Parameters (exclude self-closing slash) ---
 			let attrs_section = if self_closing {
-				&opening_tag_body[..opening_tag_body.len() - tag_info.closing_tag_prefix.len()]
+				opening_tag_body[..opening_tag_body.len() - tag_info.self_closing_suffix.len()].trim_end()
 			} else {
 				opening_tag_body
 			};

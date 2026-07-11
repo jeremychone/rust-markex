@@ -289,7 +289,7 @@ fn test_tag_parser_into_with_extrude_content() -> Result<()> {
 #[test]
 fn test_tag_parser_bracket3_fence() -> Result<()> {
 	// -- Setup & Fixtures
-	let input = r#"Before [[[FILE path="a.txt"]]]file content[[[/FILE]]] after [[[DELETE path="temp.txt" /]]] end"#;
+	let input = r#"Before [[[FILE path="a.txt"]]]file content[[[END_FILE]]] after [[[DELETE path="temp.txt" /]]] end"#;
 	let tag_names = ["FILE", "DELETE"];
 
 	// -- Exec
@@ -337,6 +337,7 @@ fn test_tag_parser_custom_fence() -> Result<()> {
 		close_delim: "}}",
 		close_delim_alts: None,
 		closing_tag_prefix: "/",
+		self_closing_suffix: "/",
 	};
 	let input = "{{DATA key=value}}payload{{/DATA}}";
 	let tag_names = ["DATA"];
@@ -363,10 +364,10 @@ fn test_tag_parser_custom_fence() -> Result<()> {
 fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 	// -- Setup & Fixtures
 	let cases = [
-		(r#"[[[FILE]]]canonical[[[/FILE]]]"#, "canonical"),
-		(r#"[[[FILE]]short-open[[[/FILE]]]"#, "short-open"),
-		(r#"[[[FILE]]]short-close[[[/FILE]]"#, "short-close"),
-		(r#"[[[FILE]]fully-short[[[/FILE]]"#, "fully-short"),
+		(r#"[[[FILE]]]canonical[[[END_FILE]]]"#, "canonical"),
+		(r#"[[[FILE]]short-open[[[END_FILE]]]"#, "short-open"),
+		(r#"[[[FILE]]]short-close[[[END_FILE]]"#, "short-close"),
+		(r#"[[[FILE]]fully-short[[[END_FILE]]"#, "fully-short"),
 	];
 
 	// -- Exec & Check
@@ -378,7 +379,7 @@ fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 		assert_eq!(tag_elem.content, expected_content);
 	}
 
-	let self_closing = extract_with_fence(r#"[[[DELETE path="temp.txt" /]]"#, &["DELETE"], false, FENCE_BRACKETS);
+	let self_closing = extract_with_fence(r#"[[[DELETE path="temp.txt" /]]]"#, &["DELETE"], false, FENCE_BRACKETS);
 	let delete_elems = self_closing.tag_elems();
 	let delete_elem = delete_elems.first().ok_or("should extract a self-closing DELETE element")?;
 
@@ -390,6 +391,23 @@ fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 			.and_then(|attrs| attrs.get("path"))
 			.ok_or("should extract the DELETE path attribute")?,
 		"temp.txt"
+	);
+
+	let compact_self_closing =
+		extract_with_fence(r#"[[[DELETE path="cache.txt"/]]]"#, &["DELETE"], false, FENCE_BRACKETS);
+	let compact_delete_elems = compact_self_closing.tag_elems();
+	let compact_delete_elem = compact_delete_elems
+		.first()
+		.ok_or("should extract a compact self-closing DELETE element")?;
+
+	assert_eq!(compact_delete_elem.content, "");
+	assert_eq!(
+		compact_delete_elem
+			.attrs
+			.as_ref()
+			.and_then(|attrs| attrs.get("path"))
+			.ok_or("should extract the compact DELETE path attribute")?,
+		"cache.txt"
 	);
 
 	Ok(())

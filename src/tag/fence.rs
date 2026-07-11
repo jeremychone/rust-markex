@@ -14,6 +14,8 @@ pub struct TagFence {
 	pub close_delim_alts: Option<&'static [&'static str]>,
 	/// The prefix between the opening delimiter and a closing tag name.
 	pub closing_tag_prefix: &'static str,
+	/// The suffix between tag attributes and the closing delimiter of a self-closing tag.
+	pub self_closing_suffix: &'static str,
 }
 
 /// The XML-compatible fence used by the existing extraction APIs.
@@ -23,6 +25,7 @@ pub const FENCE_XML: TagFence = TagFence {
 	close_delim: ">",
 	close_delim_alts: None,
 	closing_tag_prefix: "/",
+	self_closing_suffix: "/",
 };
 
 /// A triple-square-bracket fence for clearly separating structured payloads.
@@ -31,5 +34,6 @@ pub const FENCE_BRACKETS: TagFence = TagFence {
 	open_delim: "[[[",
 	close_delim: "]]]",
 	close_delim_alts: Some(&["]]"]),
-	closing_tag_prefix: "/",
+	closing_tag_prefix: "END_",
+	self_closing_suffix: "/",
 };

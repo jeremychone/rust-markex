@@ -40,6 +40,36 @@ fn test_support_tag_elem_iter_simple() -> Result<()> {
 }
 
 #[test]
+fn test_support_tag_elem_iter_bracket_fence_self_closing_spacing() -> Result<()> {
+	// -- Setup & Fixtures
+	let cases = [
+		(r#"[[[DELETE path="canonical.txt"/]]]"#, "canonical.txt"),
+		(r#"[[[DELETE path="alternate.txt" /]]"#, "alternate.txt"),
+	];
+
+	// -- Exec & Check
+	for (text, expected_path) in cases {
+		let parts: Vec<Part> = TagIter::new_with_fence(text, &["DELETE"], false, FENCE_BRACKETS).collect();
+		let tag_elem = match parts.first() {
+			Some(Part::TagElem(tag_elem)) => tag_elem,
+			_ => return Err("should extract a self-closing DELETE element".into()),
+		};
+
+		assert_eq!(tag_elem.content, "");
+		assert_eq!(
+			tag_elem
+				.attrs
+				.as_ref()
+				.and_then(|attrs| attrs.get("path"))
+				.ok_or("should extract the DELETE path attribute")?,
+			expected_path
+		);
+	}
+
+	Ok(())
+}
+
+#[test]
 fn test_support_tag_elem_iter_with_attrs() -> Result<()> {
 	// -- Setup & Fixtures
 	let text = r#"Some <DATA path="a/b.txt" flag attr=123 message='hello world'>value</DATA>"#;
@@ -206,10 +236,10 @@ fn test_support_tag_elem_iter_self_closing_mixed() -> Result<()> {
 fn test_support_tag_elem_iter_bracket_fence_alternate_delimiters() -> Result<()> {
 	// -- Setup & Fixtures
 	let cases = [
-		(r#"[[[DATA]]]canonical[[[/DATA]]]"#, "canonical"),
-		(r#"[[[DATA]]short-open[[[/DATA]]]"#, "short-open"),
-		(r#"[[[DATA]]]short-close[[[/DATA]]"#, "short-close"),
-		(r#"[[[DATA]]fully-short[[[/DATA]]"#, "fully-short"),
+		(r#"[[[DATA]]]canonical[[[END_DATA]]]"#, "canonical"),
+		(r#"[[[DATA]]short-open[[[END_DATA]]]"#, "short-open"),
+		(r#"[[[DATA]]]short-close[[[END_DATA]]"#, "short-close"),
+		(r#"[[[DATA]]fully-short[[[END_DATA]]"#, "fully-short"),
 	];
 
 	// -- Exec & Check

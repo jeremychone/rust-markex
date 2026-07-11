@@ -47,6 +47,32 @@ fn test_support_tag_content_iter_simple() -> Result<()> {
 }
 
 #[test]
+fn test_support_tag_content_iter_bracket_fence_compact_self_closing() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = r#"[[[DELETE path="cache.txt"/]]]"#;
+
+	// -- Exec
+	let parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &["DELETE"], false, FENCE_BRACKETS).collect();
+	let tags = extract_tag_elem_refs(parts);
+
+	// -- Check
+	assert_eq!(tags.len(), 1);
+	assert_eq!(tags[0].content, "");
+	assert_eq!(tags[0].start_idx, 0);
+	assert_eq!(tags[0].end_idx, text.len() - 1);
+	assert_eq!(
+		tags[0]
+			.attrs
+			.as_ref()
+			.and_then(|attrs| attrs.get("path"))
+			.ok_or("should extract the compact DELETE path attribute")?,
+		&"cache.txt"
+	);
+
+	Ok(())
+}
+
+#[test]
 fn test_support_tag_content_iter_attrs() -> Result<()> {
 	// -- Setup & Fixtures
 	let text = r#"Before <FILE path="a/b.txt" id=123>File Content</FILE> After"#;
@@ -675,7 +701,7 @@ fn test_support_tag_content_iter_self_closing_no_content_no_capture_text() -> Re
 #[test]
 fn test_support_tag_content_iter_bracket_fence_alternate_delimiters() -> Result<()> {
 	// -- Setup & Fixtures
-	let text = r#"[[[FILE]]]canonical[[[/FILE]]]"#;
+	let text = r#"[[[FILE]]]canonical[[[END_FILE]]]"#;
 
 	// -- Exec
 	let parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &["FILE"], false, FENCE_BRACKETS).collect();
