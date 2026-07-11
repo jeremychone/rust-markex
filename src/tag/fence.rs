@@ -22,8 +22,8 @@ pub const FENCE_XML: TagFence = TagFence {
 };
 
 /// A triple-square-bracket fence for clearly separating structured payloads.
-pub const FENCE_BRACKET3: TagFence = TagFence {
-	name: "bracket3",
+pub const FENCE_BRACKETS: TagFence = TagFence {
+	name: "brackets",
 	open_delim: "[[[",
 	close_delim: "]]]",
 	closing_tag_prefix: "/",

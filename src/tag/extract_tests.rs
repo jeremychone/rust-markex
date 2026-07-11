@@ -1,7 +1,7 @@
 //! Tests for the parser module.
 
 use super::{extract, extract_with_fence};
-use crate::tag::{Part, TagElem, TagFence, FENCE_BRACKET3};
+use crate::tag::{FENCE_BRACKETS, Part, TagElem, TagFence};
 use std::collections::HashMap;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -293,7 +293,7 @@ fn test_tag_parser_bracket3_fence() -> Result<()> {
 	let tag_names = ["FILE", "DELETE"];
 
 	// -- Exec
-	let result = extract_with_fence(input, &tag_names, true, FENCE_BRACKET3);
+	let result = extract_with_fence(input, &tag_names, true, FENCE_BRACKETS);
 
 	// -- Check
 	assert_eq!(result.parts().len(), 5);

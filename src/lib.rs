@@ -1,4 +1,4 @@
-//! Fast, non-validating markup element extractor (Tag Element, MdRef, MdCodeBlock, MDSection).
+#![doc = include_str!("../docs/rustdoc/lib.md")]
 
 // region:    --- Modules
 

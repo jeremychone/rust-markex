@@ -1,4 +1,4 @@
-//! Provides structures and iterators for extracting content defined by specific tags.
+#![doc = include_str!("../../docs/rustdoc/tag/mod.md")]
 
 // region:    --- Modules
 
