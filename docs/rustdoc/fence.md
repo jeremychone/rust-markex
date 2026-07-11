@@ -1,9 +1,9 @@
 [`FENCE_XML`] uses standard XML-compatible delimiters and has no alternatives.
 
-[`FENCE_BRACKETS`] uses `]]]` as its canonical closing delimiter and accepts `]]` as a fallback. Paired tags use an `END_` prefix for their closing tag names:
+[`FENCE_BRACKETS`] uses `]]]` as its canonical closing delimiter and accepts `]]` as a fallback.
 
 - canonical: `[[[FILE]]]contents[[[/FILE]]]`
-- abbreviated: `[[[FILE]]]contents[[[END_FILE]]`
+- alt `]]`: `[[[FILE]]]contents[[[/FILE]]`
 
 Self-closing tags use `/` immediately before an accepted closing delimiter. Whitespace before `/` is optional:
 

@@ -701,7 +701,7 @@ fn test_support_tag_content_iter_self_closing_no_content_no_capture_text() -> Re
 #[test]
 fn test_support_tag_content_iter_bracket_fence_alternate_delimiters() -> Result<()> {
 	// -- Setup & Fixtures
-	let text = r#"[[[FILE]]]canonical[[[END_FILE]]]"#;
+	let text = r#"[[[FILE]]]canonical[[[/FILE]]]"#;
 
 	// -- Exec
 	let parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &["FILE"], false, FENCE_BRACKETS).collect();

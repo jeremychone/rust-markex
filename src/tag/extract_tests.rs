@@ -289,7 +289,7 @@ fn test_tag_parser_into_with_extrude_content() -> Result<()> {
 #[test]
 fn test_tag_parser_bracket3_fence() -> Result<()> {
 	// -- Setup & Fixtures
-	let input = r#"Before [[[FILE path="a.txt"]]]file content[[[END_FILE]]] after [[[DELETE path="temp.txt" /]]] end"#;
+	let input = r#"Before [[[FILE path="a.txt"]]]file content[[[/FILE]]] after [[[DELETE path="temp.txt" /]]] end"#;
 	let tag_names = ["FILE", "DELETE"];
 
 	// -- Exec
@@ -364,10 +364,10 @@ fn test_tag_parser_custom_fence() -> Result<()> {
 fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 	// -- Setup & Fixtures
 	let cases = [
-		(r#"[[[FILE]]]canonical[[[END_FILE]]]"#, "canonical"),
-		(r#"[[[FILE]]short-open[[[END_FILE]]]"#, "short-open"),
-		(r#"[[[FILE]]]short-close[[[END_FILE]]"#, "short-close"),
-		(r#"[[[FILE]]fully-short[[[END_FILE]]"#, "fully-short"),
+		(r#"[[[FILE]]]canonical[[[/FILE]]]"#, "canonical"),
+		(r#"[[[FILE]]short-open[[[/FILE]]]"#, "short-open"),
+		(r#"[[[FILE]]]short-close[[[/FILE]]"#, "short-close"),
+		(r#"[[[FILE]]fully-short[[[/FILE]]"#, "fully-short"),
 	];
 
 	// -- Exec & Check
