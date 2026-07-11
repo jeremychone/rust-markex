@@ -1,8 +1,6 @@
 //! Iterator for extracting marked content sections like <TAG>...</TAG> from text.
 #![doc = include_str!("../../docs/rustdoc/tag/tag_ref_iter.md")]
 
-// region:    --- Types
-
 use crate::tag::support::parse_attrs_ref;
 use crate::tag::{FENCE_XML, TagElemRef, TagFence};
 
@@ -76,8 +74,6 @@ fn find_next_match<'a>(input: &str, patterns: impl IntoIterator<Item = &'a str>)
 
 	selected
 }
-
-// endregion: --- Types
 
 /// An iterator that finds and extracts `PartRef` sections from a string slice.
 ///

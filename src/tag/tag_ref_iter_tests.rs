@@ -696,8 +696,7 @@ fn test_support_tag_content_iter_bracket_fence_shortened_self_closing() -> Resul
 	let text = r#"[[[DELETE path="temp.txt" /]]"#;
 
 	// -- Exec
-	let parts: Vec<PartRef> =
-		TagRefIter::new_with_fence(text, &["DELETE"], false, FENCE_BRACKETS).collect();
+	let parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &["DELETE"], false, FENCE_BRACKETS).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check

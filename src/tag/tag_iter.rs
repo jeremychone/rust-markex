@@ -1,7 +1,7 @@
 //! Iterator to extract structured `TagElem`s including content and parsed attributes.
 #![doc = include_str!("../../docs/rustdoc/tag/tag_iter.md")]
 
-use super::{Part, TagFence, TagRefIter, FENCE_XML};
+use super::{FENCE_XML, Part, TagFence, TagRefIter};
 
 /// Iterator that yields owned `Part` instances (`Text` or `TagElem`), found within a text
 /// based on specific tag names.
@@ -23,12 +23,7 @@ impl<'a> TagIter<'a> {
 	}
 
 	/// Creates a new `TagIter` using the provided tag fence.
-	pub fn new_with_fence(
-		input: &'a str,
-		tag_names: &[&'a str],
-		capture_text: bool,
-		fence: TagFence,
-	) -> Self {
+	pub fn new_with_fence(input: &'a str, tag_names: &[&'a str], capture_text: bool, fence: TagFence) -> Self {
 		let tag_names_vec: Vec<&'a str> = tag_names.to_vec();
 		let tag_content_iter = TagRefIter::new_with_fence(input, &tag_names_vec, capture_text, fence);
 

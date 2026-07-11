@@ -1,6 +1,6 @@
 //! Parser module for extracting tag elements and text fragments from input.
 
-use crate::tag::{Parts, PartsRef, TagFence, TagIter, TagRefIter, FENCE_XML};
+use crate::tag::{FENCE_XML, Parts, PartsRef, TagFence, TagIter, TagRefIter};
 
 /// Parses the input string for the specified tag names.
 ///

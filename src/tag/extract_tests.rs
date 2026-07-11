@@ -378,16 +378,9 @@ fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 		assert_eq!(tag_elem.content, expected_content);
 	}
 
-	let self_closing = extract_with_fence(
-		r#"[[[DELETE path="temp.txt" /]]"#,
-		&["DELETE"],
-		false,
-		FENCE_BRACKETS,
-	);
+	let self_closing = extract_with_fence(r#"[[[DELETE path="temp.txt" /]]"#, &["DELETE"], false, FENCE_BRACKETS);
 	let delete_elems = self_closing.tag_elems();
-	let delete_elem = delete_elems
-		.first()
-		.ok_or("should extract a self-closing DELETE element")?;
+	let delete_elem = delete_elems.first().ok_or("should extract a self-closing DELETE element")?;
 
 	assert_eq!(delete_elem.content, "");
 	assert_eq!(
