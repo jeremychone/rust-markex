@@ -34,6 +34,6 @@ pub const FENCE_BRACKETS: TagFence = TagFence {
 	open_delim: "[[[",
 	close_delim: "]]]",
 	close_delim_alts: Some(&["]]"]),
-	closing_tag_prefix: "END_",
+	closing_tag_prefix: "/",
 	self_closing_suffix: "/",
 };
