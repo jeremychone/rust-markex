@@ -39,7 +39,7 @@ pub struct TagFence {
 - `name`: static descriptive identifier, not used for matching.
 
 - `FENCE_XML`: XML-compatible delimiters, such as `<FILE>content</FILE>`.
-- `FENCE_BRACKETS`: Triple-square-bracket delimiters, such as `[[[FILE]]]content[[[/FILE]]]`.
+- `FENCE_BRACKETS`: Triple-square-bracket delimiters for multiline structured content.
 `markex` includes [`tag::FENCE_XML`] and [`tag::FENCE_BRACKETS`], and applications can define their own fence values. `FENCE_BRACKETS` accepts both its canonical `]]]` closing delimiter and the tolerant `]]` fallback, including paired and self-closing forms.
 
 Pass a fence to `extract_with_fence`, `extract_refs_with_fence`, or either iterator's `new_with_fence` constructor. Self-closing tags place `closing_tag_prefix` immediately before `close_delim`, such as `<DELETE />` or `[[[DELETE /]]]`.
@@ -47,13 +47,17 @@ Pass a fence to `extract_with_fence`, `extract_refs_with_fence`, or either itera
 ```rust
 use markex::tag::{extract_with_fence, FENCE_BRACKETS};
 
-let input = "[[[FILE path=\"notes.txt\"]]]contents[[[/FILE]]]";
-let parts = extract_with_fence(input, &["FILE"], false, FENCE_BRACKETS);
+let input = r#"[[[BIG_CONTENT path="/some/path.txt"]]]
+... some big content
+[[[/BIG_CONTENT]]]"#;
+let parts = extract_with_fence(input, &["BIG_CONTENT"], false, FENCE_BRACKETS);
 let file = &parts.tag_elems()[0];
 
-assert_eq!(file.tag, "FILE");
-assert_eq!(file.content, "contents");
+assert_eq!(file.tag, "BIG_CONTENT");
+assert_eq!(file.content, "\n... some big content\n");
 ```
+
+Keeping the tags on their own lines separates directives from large payloads. This style can help LLMs generate tag output without confusing the markup syntax with content.
 
 Custom fences support the same paired and self-closing forms:
 
@@ -72,7 +76,7 @@ let parts = extract_with_fence("{{DATA key=value}}payload{{/DATA}}", &["DATA"], 
 assert_eq!(parts.tag_elems()[0].content, "payload");
 ```
 
-`FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, so `[[[DATA]]payload[[[/DATA]]` is recognized. Custom [`TagFence`] values can opt into the same tolerant behavior with `close_delim_alts`. The canonical delimiter is preferred whenever it and an alternate begin at the same position.
+`FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, so a multiline block may use `[[[BIG_CONTENT]]` and `[[[/BIG_CONTENT]]`. Custom [`TagFence`] values can opt into the same tolerant behavior with `close_delim_alts`. The canonical delimiter is preferred whenever it and an alternate begin at the same position.
 
 ### Owned Types
 

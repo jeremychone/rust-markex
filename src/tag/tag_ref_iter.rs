@@ -3,8 +3,8 @@
 
 // region:    --- Types
 
-use crate::tag::{TagElemRef, TagFence, FENCE_XML};
 use crate::tag::support::parse_attrs_ref;
+use crate::tag::{FENCE_XML, TagElemRef, TagFence};
 
 /// Represents a part of parsed content as a reference, either plain text or a tag element reference.
 #[derive(Debug, PartialEq)]
@@ -20,9 +20,9 @@ pub enum PartRef<'a> {
 pub struct TagPattern {
 	/// The original tag name (e.g., "FILE").
 	pub name: String,
-	/// The opening tag prefix (e.g., "<FILE"). Used to find the start of the tag.
+	/// The opening tag prefix (e.g., `<FILE`). Used to find the start of the tag.
 	pub start_tag_prefix: String,
-	/// The closing tag structure (e.g., "</FILE>"). Used to find the end of the element.
+	/// The closing tag structure (e.g., `</FILE>`). Used to find the end of the element.
 	pub end_tags: Vec<String>,
 	/// The delimiters that end opening and closing tags.
 	pub close_delims: Vec<&'static str>,
@@ -56,10 +56,7 @@ impl TagPattern {
 	}
 }
 
-fn find_next_match<'a>(
-	input: &str,
-	patterns: impl IntoIterator<Item = &'a str>,
-) -> Option<(usize, usize)> {
+fn find_next_match<'a>(input: &str, patterns: impl IntoIterator<Item = &'a str>) -> Option<(usize, usize)> {
 	let mut selected = None;
 
 	for pattern in patterns {
@@ -174,12 +171,12 @@ impl<'a> TagRefIter<'a> {
 			let (open_tag_end_offset, close_delim_len) =
 				match find_next_match(remaining_from_start, tag_info.close_delims.iter().copied()) {
 					Some(match_info) => match_info,
-				None => {
-					// Malformed open tag (no '>'). Stop searching. Consider advancing past '<'?
-					// For simplicity, we stop here. A more robust parser might skip.
-					return None;
-				}
-			};
+					None => {
+						// Malformed open tag (no '>'). Stop searching. Consider advancing past '<'?
+						// For simplicity, we stop here. A more robust parser might skip.
+						return None;
+					}
+				};
 			let open_tag_close_start_idx = start_idx + open_tag_end_offset;
 			let open_tag_end_idx = open_tag_close_start_idx + close_delim_len - 1;
 

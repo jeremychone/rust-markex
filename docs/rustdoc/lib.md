@@ -39,16 +39,18 @@ Use a [`tag::TagFence`] when the structured payload uses delimiters other than X
 use markex::tag::{self, FENCE_BRACKETS};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let input = "[[[FILE path=\"notes.txt\"]]]contents[[[/FILE]]]";
-    let parts = tag::extract_with_fence(input, &["FILE"], false, FENCE_BRACKETS);
+    let input = r#"[[[BIG_CONTENT path="/some/path.txt"]]]
+... some big content
+[[[/BIG_CONTENT]]]"#;
+    let parts = tag::extract_with_fence(input, &["BIG_CONTENT"], false, FENCE_BRACKETS);
     let file = parts
         .into_tag_elems()
         .into_iter()
         .next()
-        .ok_or("expected a FILE element")?;
+        .ok_or("expected a BIG_CONTENT element")?;
 
-    assert_eq!(file.tag, "FILE");
-    assert_eq!(file.content, "contents");
+    assert_eq!(file.tag, "BIG_CONTENT");
+    assert_eq!(file.content, "\n... some big content\n");
 
     Ok(())
 }
@@ -80,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-`FENCE_BRACKETS` accepts its canonical `]]]` delimiter and the tolerant `]]` alternate. When both delimiters begin at the same position, the canonical, longer delimiter is selected.
+`FENCE_BRACKETS` accepts its canonical `]]]` delimiter and the tolerant `]]` alternate. When both delimiters begin at the same position, the canonical, longer delimiter is selected. Keeping bracket tags on separate lines from large payloads can help LLMs generate structured output without confusing the tag syntax with content.
 
 ## Owned and borrowed extraction
 

@@ -35,13 +35,18 @@ A [`TagFence`] describes a tag syntax with:
 ```rust
 use markex::tag::{self, FENCE_BRACKETS};
 
-let input = "[[[DATA]]]payload[[[/DATA]]]";
-let parts = tag::extract_with_fence(input, &["DATA"], false, FENCE_BRACKETS);
+let input = r#"[[[BIG_CONTENT path="/some/path.txt"]]]
+... some big content
+[[[/BIG_CONTENT]]]"#;
 
-assert_eq!(parts.tag_elems()[0].content, "payload");
+let parts = tag::extract_with_fence(input, &["BIG_CONTENT"], false, FENCE_BRACKETS);
+
+assert_eq!(parts.tag_elems()[0].content, "\n... some big content\n");
 ```
 
-`FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, including paired and self-closing tags. For example, `[[[DATA]]payload[[[/DATA]]` is valid. If its canonical `]]]` delimiter and `]]` alternate both begin at the same location, extraction uses the longer canonical delimiter.
+Place bracket tags on separate lines from large payloads. This makes the structured boundary clear and can help LLMs generate tag output without confusing the tag syntax with content.
+
+`FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, including paired and self-closing tags. For example, the opening and closing tags in the preceding multiline block may use `[[[BIG_CONTENT]]` and `[[[/BIG_CONTENT]]`. If its canonical `]]]` delimiter and `]]` alternate both begin at the same location, extraction uses the longer canonical delimiter.
 
 Custom fences may configure the same behavior with `close_delim_alts`. The canonical delimiter is always considered first:
 
