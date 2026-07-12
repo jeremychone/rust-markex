@@ -22,7 +22,8 @@ fn test_support_tag_elem_iter_simple() -> Result<()> {
 		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: None,
-			content: "content1".to_string()
+			content: "content1".to_string(),
+			auto_closed: false,
 		})
 	);
 	assert_eq!(parts[2], Part::Text(" more text ".to_string()));
@@ -31,7 +32,8 @@ fn test_support_tag_elem_iter_simple() -> Result<()> {
 		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: None,
-			content: "content2".to_string()
+			content: "content2".to_string(),
+			auto_closed: false,
 		})
 	);
 	assert_eq!(parts[4], Part::Text(" final.".to_string()));
@@ -93,7 +95,8 @@ fn test_support_tag_elem_iter_with_attrs() -> Result<()> {
 		Part::TagElem(TagElem {
 			tag: "DATA".to_string(),
 			attrs: Some(expected_attrs.clone()),
-			content: "value".to_string()
+			content: "value".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -134,7 +137,8 @@ fn test_support_tag_elem_iter_multiple_tag_names() -> Result<()> {
 		Part::TagElem(TagElem {
 			tag: "ONE".to_string(),
 			attrs: None,
-			content: "first".to_string()
+			content: "first".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -148,7 +152,8 @@ fn test_support_tag_elem_iter_multiple_tag_names() -> Result<()> {
 		Part::TagElem(TagElem {
 			tag: "TWO".to_string(),
 			attrs: Some(expected_attrs),
-			content: "second".to_string()
+			content: "second".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -176,6 +181,7 @@ fn test_support_tag_elem_iter_self_closing_simple() -> Result<()> {
 			tag: "DATA".to_string(),
 			attrs: None,
 			content: "".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -204,6 +210,7 @@ fn test_support_tag_elem_iter_self_closing_with_attrs() -> Result<()> {
 			tag: "FILE".to_string(),
 			attrs: Some(expected_attrs),
 			content: "".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -252,6 +259,7 @@ fn test_support_tag_elem_iter_bracket_fence_alternate_delimiters() -> Result<()>
 				tag: "DATA".to_string(),
 				attrs: None,
 				content: expected_content.to_string(),
+				auto_closed: false,
 			})]
 		);
 	}
@@ -272,6 +280,37 @@ fn test_support_tag_elem_iter_with_options_matches_fence() -> Result<()> {
 
 	// -- Check
 	assert_eq!(option_parts, fence_parts);
+
+	Ok(())
+}
+
+#[test]
+fn test_tag_iter_auto_close_bracket_fence_same_name() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "[[[ITEM]]]first[[[ITEM]]]second[[[/ITEM]]]";
+	let options = TagOptions::default().with_fence(FENCE_BRACKETS).with_auto_close(true);
+
+	// -- Exec
+	let parts: Vec<Part> = TagIter::new_with_options(text, &["ITEM"], false, options).collect();
+
+	// -- Check
+	assert_eq!(
+		parts,
+		vec![
+			Part::TagElem(TagElem {
+				tag: "ITEM".to_string(),
+				attrs: None,
+				content: "first".to_string(),
+				auto_closed: true,
+			}),
+			Part::TagElem(TagElem {
+				tag: "ITEM".to_string(),
+				attrs: None,
+				content: "second".to_string(),
+				auto_closed: false,
+			}),
+		]
+	);
 
 	Ok(())
 }

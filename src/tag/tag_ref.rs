@@ -17,6 +17,9 @@ pub struct TagElemRef<'a> {
 	/// The content string between the opening and closing tags.
 	pub content: &'a str,
 
+	/// Whether the closing boundary was synthesized by the parser.
+	pub auto_closed: bool,
+
 	/// The byte index of the opening '<' of the start tag in the original string.
 	pub start_idx: usize,
 

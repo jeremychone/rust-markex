@@ -90,6 +90,7 @@ pub struct TagRefIter<'a> {
 	pending_tag: Option<TagElemRef<'a>>,
 	finished: bool,
 	capture_text: bool,
+	auto_close: bool,
 }
 
 impl<'a> TagRefIter<'a> {
@@ -123,7 +124,57 @@ impl<'a> TagRefIter<'a> {
 			pending_tag: None,
 			finished: false,
 			capture_text,
+			auto_close: options.auto_close,
 		}
+	}
+
+	fn find_next_opening(&self, from_idx: usize) -> Option<(usize, &TagPattern)> {
+		let mut current_pos = from_idx;
+
+		while current_pos < self.input.len() {
+			let remaining_input = &self.input[current_pos..];
+			let mut selected: Option<(usize, &TagPattern)> = None;
+
+			for tag_info in &self.tag_patterns {
+				if let Some(offset) = remaining_input.find(&tag_info.start_tag_prefix) {
+					let start_idx = current_pos + offset;
+
+					selected = match selected {
+						None => Some((start_idx, tag_info)),
+						Some((existing_idx, existing_tag)) => {
+							if start_idx < existing_idx
+								|| (start_idx == existing_idx && tag_info.name.len() > existing_tag.name.len())
+							{
+								Some((start_idx, tag_info))
+							} else {
+								Some((existing_idx, existing_tag))
+							}
+						}
+					};
+				}
+			}
+
+			let (start_idx, tag_info) = selected?;
+			let after_prefix_idx = start_idx + tag_info.start_tag_prefix.len();
+			let remaining_after_prefix = &self.input[after_prefix_idx..];
+			let valid_after_prefix = tag_info
+				.close_delims
+				.iter()
+				.any(|close_delim| remaining_after_prefix.starts_with(close_delim))
+				|| remaining_after_prefix.starts_with(&tag_info.closing_tag_prefix)
+				|| matches!(
+					self.input.as_bytes().get(after_prefix_idx),
+					Some(b' ') | Some(b'\n') | Some(b'\t') | Some(b'\r')
+				);
+
+			if valid_after_prefix {
+				return Some((start_idx, tag_info));
+			}
+
+			current_pos = start_idx + 1;
+		}
+
+		None
 	}
 
 	/// Internal method to find the next tag element.
@@ -211,6 +262,7 @@ impl<'a> TagRefIter<'a> {
 					tag_name,
 					attrs,
 					content: "",
+					auto_closed: false,
 					start_idx,
 					end_idx,
 				});
@@ -224,8 +276,26 @@ impl<'a> TagRefIter<'a> {
 			}
 
 			let remaining_after_open = &self.input[search_after_open_tag_idx..];
-			let (close_tag_start_offset, close_tag_len) =
-				find_next_match(remaining_after_open, tag_info.end_tags.iter().map(String::as_str))?;
+			let close_tag = find_next_match(remaining_after_open, tag_info.end_tags.iter().map(String::as_str));
+			if self.auto_close
+				&& let Some((next_opening_idx, _)) = self.find_next_opening(search_after_open_tag_idx)
+				&& close_tag
+					.map(|(close_tag_start_offset, _)| search_after_open_tag_idx + close_tag_start_offset)
+					.is_none_or(|close_tag_start_idx| next_opening_idx < close_tag_start_idx)
+			{
+				let content = &self.input[open_tag_end_idx + 1..next_opening_idx];
+				self.current_pos = next_opening_idx;
+
+				return Some(TagElemRef {
+					tag_name,
+					attrs,
+					content,
+					auto_closed: true,
+					start_idx,
+					end_idx: next_opening_idx - 1,
+				});
+			}
+			let (close_tag_start_offset, close_tag_len) = close_tag?;
 			let close_tag_start_idx = search_after_open_tag_idx + close_tag_start_offset;
 			// Corrected end_idx calculation: it's the index of the '>' of the closing tag
 			// The end index should be the index of the last character of the closing tag '>'
@@ -243,6 +313,7 @@ impl<'a> TagRefIter<'a> {
 				tag_name,
 				attrs,
 				content,
+				auto_closed: false,
 				start_idx,
 				end_idx,
 			});

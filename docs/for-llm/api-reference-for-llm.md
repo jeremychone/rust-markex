@@ -86,12 +86,19 @@ assert_eq!(parts.tag_elems()[0].content, "payload");
 ```rust
 pub struct TagOptions {
     pub fence: Option<TagFence>,
+    pub auto_close: bool,
 }
 ```
 
 `TagOptions::default()` preserves XML-compatible parsing. Use `TagOptions::default().with_fence(FENCE_BRACKETS)` to
 configure bracket-tag parsing through `extract_with_options`, `extract_refs_with_options`, `TagIter::new_with_options`,
-or `TagRefIter::new_with_options`.
+or `TagRefIter::new_with_options`. Use `TagOptions::default().with_auto_close(true)` to recover an element whose
+closing tag is omitted before the next valid configured opening tag. Auto-close is disabled by default, applies to
+same-name and different-name configured openings, and does not support nesting.
+
+An element closed this way has `auto_closed: true`; normally closed and self-closing elements have `auto_closed: false`.
+Malformed, partial, and non-configured candidate tags do not trigger auto-close. The subsequent valid opening remains
+available for normal parsing.
 
 ### Owned Types
 
@@ -101,6 +108,7 @@ pub struct TagElem {
     pub tag: String,
     pub attrs: Option<HashMap<String, String>>,
     pub content: String,
+    pub auto_closed: bool,
 }
 ```
 
@@ -130,6 +138,7 @@ pub struct TagElemRef<'a> {
     pub tag_name: &'a str,
     pub attrs: Option<HashMap<&'a str, &'a str>>,
     pub content: &'a str,
+    pub auto_closed: bool,
     pub start_idx: usize,
     pub end_idx: usize,
 }
@@ -166,4 +175,5 @@ pub enum PartRef<'a> {
 - `TagRefIter::new_with_options(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions)`
 
 `TagIter::new_single_tag` is the owned iterator convenience constructor. Both iterators provide `new_with_fence` and
-`new_with_options` for streaming extraction with custom configuration.
+`new_with_options` for streaming extraction with custom configuration. Pass `TagOptions::with_auto_close(true)` to
+either `new_with_options` constructor to enable streaming auto-close recovery.

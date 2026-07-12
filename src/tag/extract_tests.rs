@@ -25,6 +25,7 @@ fn test_tag_parser_simple_with_text() -> Result<()> {
 			tag: "DATA".to_string(),
 			attrs: None,
 			content: "content".to_string(),
+			auto_closed: false,
 		})
 	);
 	assert_eq!(result.parts()[2], Part::Text(" After".to_string()));
@@ -49,6 +50,7 @@ fn test_tag_parser_simple_without_text() -> Result<()> {
 			tag: "DATA".to_string(),
 			attrs: None,
 			content: "content".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -77,6 +79,7 @@ fn test_tag_parser_multiple_tags_with_attrs() -> Result<()> {
 			tag: "FILE".to_string(),
 			attrs: Some(file_attrs),
 			content: "file content".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -90,6 +93,7 @@ fn test_tag_parser_multiple_tags_with_attrs() -> Result<()> {
 			tag: "DATA".to_string(),
 			attrs: Some(data_attrs),
 			content: "data content".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -152,6 +156,7 @@ fn test_tag_parser_only_tag() -> Result<()> {
 			tag: "DATA".to_string(),
 			attrs: None,
 			content: "content".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -175,6 +180,7 @@ fn test_tag_parser_adjacent_tags() -> Result<()> {
 			tag: "A".to_string(),
 			attrs: None,
 			content: "first".to_string(),
+			auto_closed: false,
 		})
 	);
 	assert_eq!(
@@ -183,6 +189,7 @@ fn test_tag_parser_adjacent_tags() -> Result<()> {
 			tag: "B".to_string(),
 			attrs: None,
 			content: "second".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -307,6 +314,7 @@ fn test_tag_parser_bracket3_fence() -> Result<()> {
 			tag: "FILE".to_string(),
 			attrs: Some(file_attrs),
 			content: "file content".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -320,6 +328,7 @@ fn test_tag_parser_bracket3_fence() -> Result<()> {
 			tag: "DELETE".to_string(),
 			attrs: Some(delete_attrs),
 			content: "".to_string(),
+			auto_closed: false,
 		})
 	);
 
@@ -354,6 +363,7 @@ fn test_tag_parser_custom_fence() -> Result<()> {
 			tag: "DATA".to_string(),
 			attrs: Some(attrs),
 			content: "payload".to_string(),
+			auto_closed: false,
 		})]
 	);
 
@@ -432,6 +442,36 @@ fn test_tag_parser_extract_with_options_default_and_fence() -> Result<()> {
 	assert_eq!(default_options.fence, None);
 	assert_eq!(default_result.parts(), existing_default_result.parts());
 	assert_eq!(option_fence_result.parts(), existing_fence_result.parts());
+
+	Ok(())
+}
+
+#[test]
+fn test_tag_extract_auto_close_with_options_and_normal_close_precedence() -> Result<()> {
+	// -- Setup & Fixtures
+	let auto_close_input = "<FILE>first <DATA>second</DATA>";
+	let normally_closed_input = "<FILE>first</FILE><DATA>second</DATA>";
+	let tag_names = ["FILE", "DATA"];
+	let options = TagOptions::default().with_auto_close(true);
+
+	// -- Exec
+	let auto_close_result = extract_with_options(auto_close_input, &tag_names, false, options);
+	let normally_closed_result = extract_with_options(normally_closed_input, &tag_names, false, options);
+
+	// -- Check
+	let auto_close_tags = auto_close_result.tag_elems();
+	let auto_closed_file = auto_close_tags.first().ok_or("should extract an auto-closed FILE element")?;
+	let data_tag = auto_close_tags.get(1).ok_or("should extract the following DATA element")?;
+
+	assert_eq!(auto_closed_file.content, "first ");
+	assert!(auto_closed_file.auto_closed);
+	assert_eq!(data_tag.content, "second");
+	assert!(!data_tag.auto_closed);
+
+	let normally_closed_tags = normally_closed_result.tag_elems();
+	assert_eq!(normally_closed_tags.len(), 2);
+	assert!(!normally_closed_tags[0].auto_closed);
+	assert!(!normally_closed_tags[1].auto_closed);
 
 	Ok(())
 }

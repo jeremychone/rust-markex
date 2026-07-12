@@ -38,6 +38,7 @@ fn test_support_tag_content_iter_simple() -> Result<()> {
 			tag_name: "DATA",
 			attrs: None,
 			content: "content",
+			auto_closed: false,
 			start_idx: 10,
 			end_idx: 29,
 		}
@@ -95,6 +96,7 @@ fn test_support_tag_content_iter_attrs() -> Result<()> {
 			tag_name: "FILE",
 			attrs: Some(expected_attrs),
 			content: "File Content",
+			auto_closed: false,
 			start_idx: 7,
 			end_idx: 53,
 		}
@@ -126,6 +128,7 @@ fn test_support_tag_content_iter_attrs_with_newline() -> Result<()> {
 			tag_name: "FILE",
 			attrs: Some(expected_attrs),
 			content: "File Content",
+			auto_closed: false,
 			start_idx: 7,
 			end_idx: 55,
 		}
@@ -152,6 +155,7 @@ fn test_support_tag_content_iter_multiple() -> Result<()> {
 			tag_name: "ITEM",
 			attrs: None,
 			content: "one",
+			auto_closed: false,
 			start_idx: 6,
 			end_idx: 21,
 		}
@@ -166,6 +170,7 @@ fn test_support_tag_content_iter_multiple() -> Result<()> {
 			tag_name: "ITEM",
 			attrs: Some(expected_attrs),
 			content: "two",
+			auto_closed: false,
 			start_idx: 24,
 			end_idx: 47,
 		}
@@ -208,6 +213,7 @@ fn test_support_tag_content_iter_empty_content() -> Result<()> {
 			tag_name: "EMPTY",
 			attrs: None,
 			content: "",
+			auto_closed: false,
 			start_idx: 0,
 			end_idx: 14,
 		}
@@ -234,6 +240,7 @@ fn test_support_tag_content_iter_nested_like() -> Result<()> {
 			tag_name: "OUTER",
 			attrs: None,
 			content: "outer <INNER>inner</INNER> outer",
+			auto_closed: false,
 			start_idx: 0,
 			end_idx: 46,
 		}
@@ -250,6 +257,7 @@ fn test_support_tag_content_iter_nested_like() -> Result<()> {
 			tag_name: "INNER",
 			attrs: None,
 			content: "inner",
+			auto_closed: false,
 			start_idx: 13,
 			end_idx: 32,
 		}
@@ -310,6 +318,7 @@ fn test_support_tag_content_iter_edges() -> Result<()> {
 			tag_name: "START",
 			attrs: None,
 			content: "at start",
+			auto_closed: false,
 			start_idx: 0,
 			end_idx: 22,
 		}
@@ -326,6 +335,7 @@ fn test_support_tag_content_iter_edges() -> Result<()> {
 			tag_name: "END",
 			attrs: None,
 			content: "at end",
+			auto_closed: false,
 			start_idx: 29,
 			end_idx: 45,
 		}
@@ -368,6 +378,7 @@ fn test_support_tag_content_iter_tag_name_prefix_check() -> Result<()> {
 			tag_name: "TAG",
 			attrs: None,
 			content: "real",
+			auto_closed: false,
 			start_idx: 28,
 			end_idx: 42,
 		}
@@ -394,6 +405,7 @@ fn test_support_tag_content_iter_multiple_tag_names() -> Result<()> {
 			tag_name: "ONE",
 			attrs: None,
 			content: "first",
+			auto_closed: false,
 			start_idx: 6,
 			end_idx: 21,
 		}
@@ -408,6 +420,7 @@ fn test_support_tag_content_iter_multiple_tag_names() -> Result<()> {
 			tag_name: "TWO",
 			attrs: Some(expected_attrs),
 			content: "second",
+			auto_closed: false,
 			start_idx: 28,
 			end_idx: 52,
 		}
@@ -576,6 +589,7 @@ fn test_support_tag_content_iter_self_closing_simple() -> Result<()> {
 			tag_name: "DATA",
 			attrs: None,
 			content: "",
+			auto_closed: false,
 			start_idx: 0,
 			end_idx: 6,
 		}
@@ -607,6 +621,7 @@ fn test_support_tag_content_iter_self_closing_with_attrs() -> Result<()> {
 			tag_name: "FILE",
 			attrs: Some(expected_attrs),
 			content: "",
+			auto_closed: false,
 			start_idx: 0,
 			end_idx: 29,
 		}
@@ -772,6 +787,104 @@ fn test_support_tag_content_iter_with_options_matches_fence() -> Result<()> {
 
 	// -- Check
 	assert_eq!(option_parts, fence_parts);
+
+	Ok(())
+}
+
+#[test]
+fn test_tag_ref_iter_auto_close_strict_and_malformed_candidates() -> Result<()> {
+	// -- Setup & Fixtures
+	let strict_input = "<FILE>first <DATA>second</DATA>";
+	let malformed_input = "<FILE>first <DATA_EXTRA>second</DATA_EXTRA>";
+	let tag_names = ["FILE", "DATA"];
+
+	// -- Exec
+	let strict_parts: Vec<PartRef> = TagRefIter::new(strict_input, &tag_names, true).collect();
+	let malformed_parts: Vec<PartRef> = TagRefIter::new_with_options(
+		malformed_input,
+		&tag_names,
+		true,
+		TagOptions::default().with_auto_close(true),
+	)
+	.collect();
+
+	// -- Check
+	assert_eq!(strict_parts, vec![PartRef::Text(strict_input)]);
+	assert_eq!(malformed_parts, vec![PartRef::Text(malformed_input)]);
+
+	Ok(())
+}
+
+#[test]
+fn test_tag_ref_iter_auto_close_preserves_content_boundaries() -> Result<()> {
+	// -- Setup & Fixtures
+	let input = "<FILE>first \n<DATA>second</DATA>";
+	let tag_names = ["FILE", "DATA"];
+
+	// -- Exec
+	let parts: Vec<PartRef> =
+		TagRefIter::new_with_options(input, &tag_names, true, TagOptions::default().with_auto_close(true)).collect();
+
+	// -- Check
+	let tags = extract_tag_elem_refs(parts);
+	let file_tag = tags.first().ok_or("should extract an auto-closed FILE element")?;
+	let data_tag = tags.get(1).ok_or("should extract the following DATA element")?;
+
+	assert_eq!(file_tag.content, "first \n");
+	assert!(file_tag.auto_closed);
+	assert_eq!(file_tag.end_idx + 1, data_tag.start_idx);
+	assert_eq!(data_tag.content, "second");
+	assert!(!data_tag.auto_closed);
+
+	Ok(())
+}
+
+#[test]
+fn test_tag_ref_iter_auto_close_empty_and_nested_configured_tags() -> Result<()> {
+	// -- Setup & Fixtures
+	let empty_input = "<FILE><DATA>value</DATA>";
+	let nested_input = "<OUTER><INNER>value</INNER></OUTER>";
+
+	// -- Exec
+	let empty_parts: Vec<PartRef> = TagRefIter::new_with_options(
+		empty_input,
+		&["FILE", "DATA"],
+		false,
+		TagOptions::default().with_auto_close(true),
+	)
+	.collect();
+	let nested_parts: Vec<PartRef> = TagRefIter::new_with_options(
+		nested_input,
+		&["OUTER", "INNER"],
+		true,
+		TagOptions::default().with_auto_close(true),
+	)
+	.collect();
+
+	// -- Check
+	let empty_tags = extract_tag_elem_refs(empty_parts);
+	let file_tag = empty_tags.first().ok_or("should extract an empty auto-closed FILE element")?;
+	let data_tag = empty_tags.get(1).ok_or("should extract the following DATA element")?;
+
+	assert_eq!(file_tag.content, "");
+	assert!(file_tag.auto_closed);
+	assert_eq!(file_tag.end_idx, "<FILE>".len() - 1);
+	assert_eq!(file_tag.end_idx + 1, data_tag.start_idx);
+
+	assert_eq!(nested_parts.len(), 3);
+	let nested_outer = match &nested_parts[0] {
+		PartRef::TagElemRef(tag) => tag,
+		_ => return Err("should extract an auto-closed OUTER element".into()),
+	};
+	let nested_inner = match &nested_parts[1] {
+		PartRef::TagElemRef(tag) => tag,
+		_ => return Err("should extract the nested INNER element".into()),
+	};
+
+	assert!(nested_outer.auto_closed);
+	assert_eq!(nested_outer.content, "");
+	assert!(!nested_inner.auto_closed);
+	assert_eq!(nested_parts[2], PartRef::Text("</OUTER>"));
 
 	Ok(())
 }

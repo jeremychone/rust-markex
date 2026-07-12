@@ -5,3 +5,5 @@
 Use [`TagRefIter::new`] for XML-compatible syntax, or [`TagRefIter::new_with_fence`] to use a custom [`TagFence`]. The supplied fence controls canonical and alternate closing delimiters. In particular, [`FENCE_BRACKETS`] accepts canonical `]]]` delimiters and tolerant `]]` fallback delimiters.
 
 Set `capture_text` to `true` to receive unmatched spans as [`PartRef::Text`] values in source order. Set it to `false` to yield only matched tag elements.
+
+Use [`TagRefIter::new_with_options`] with [`TagOptions::with_auto_close`] to recover an element whose closing tag is omitted before the next valid configured opening tag. Synthesized elements have [`TagElemRef::auto_closed`] set to `true`.

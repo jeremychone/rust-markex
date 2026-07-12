@@ -71,7 +71,7 @@ Use [`extract_refs_with_fence`] for the same syntax when zero-copy results are n
 ## Options
 
 [`TagOptions`] configures optional extraction behavior. Its default value preserves XML-compatible parsing, while
-[`TagOptions::with_fence`] selects a custom [`TagFence`].
+[`TagOptions::with_fence`] selects a custom [`TagFence`]. [`TagOptions::with_auto_close`] opts into recovery when a configured element omits its closing tag before another valid configured opening tag.
 
 ```rust
 use markex::tag::{self, FENCE_BRACKETS, TagOptions};
@@ -81,6 +81,24 @@ let parts = tag::extract_with_options("[[[DATA]]]content[[[/DATA]]]", &["DATA"],
 
 assert_eq!(parts.tag_elems()[0].content, "content");
 ```
+
+## Auto-close recovery
+
+By default, extraction requires a matching closing tag. With `auto_close` enabled, a configured opening tag that appears before the current element's matching close synthesizes a close for the current element. The following opening tag remains available for normal parsing, and only the synthesized element has `auto_closed: true`.
+
+```rust
+use markex::tag::{self, TagOptions};
+
+let options = TagOptions::default().with_auto_close(true);
+let parts = tag::extract_with_options("<FILE>first <DATA>second</DATA>", &["FILE", "DATA"], false, options);
+let elements = parts.tag_elems();
+
+assert_eq!(elements[0].content, "first ");
+assert!(elements[0].auto_closed);
+assert!(!elements[1].auto_closed);
+```
+
+Auto-close applies to same-name and different-name configured openings, but does not enable nested parsing. Invalid or partial configured-tag candidates do not trigger recovery.
 
 ## Borrowed results
 
@@ -93,4 +111,5 @@ The input must outlive the returned `PartsRef`.
 
 [`TagIter`] yields owned [`Part`] values, while [`TagRefIter`] yields borrowed [`PartRef`] values. Both provide `new`,
 `new_with_fence`, and `new_with_options` constructors for incremental processing. [`TagIter`] also provides
-`new_single_tag` for single-tag owned extraction.
+`new_single_tag` for single-tag owned extraction. Pass [`TagOptions::with_auto_close`] through either iterator's
+`new_with_options` constructor to enable streaming auto-close recovery.

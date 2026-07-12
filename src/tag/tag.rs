@@ -13,6 +13,8 @@ pub struct TagElem {
 	pub attrs: Option<HashMap<String, String>>,
 
 	pub content: String,
+
+	pub auto_closed: bool,
 }
 
 impl TagElem {
@@ -22,6 +24,7 @@ impl TagElem {
 			tag: name.into(),
 			attrs,
 			content: content.into(),
+			auto_closed: false,
 		}
 	}
 }
@@ -34,6 +37,7 @@ impl From<crate::tag::TagElemRef<'_>> for TagElem {
 				.attrs
 				.map(|attrs| attrs.into_iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()),
 			content: tag_ref.content.to_string(),
+			auto_closed: tag_ref.auto_closed,
 		}
 	}
 }
