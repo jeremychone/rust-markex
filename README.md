@@ -9,7 +9,7 @@
 ## Quick Start
 
 ```rust
-use markex::tag::{self, Part};
+use markex::tag::{self, Part, TagOptions};
 
 fn main() {
     let input = r#"Text before
@@ -19,7 +19,13 @@ fn main() {
 Text after."#;
 
     // 1. Owned Extraction
-    let parts = tag::extract_with_fence(input, &["BIG_CONTENT"], true, tag::FENCE_BRACKETS);
+    let parts = tag::extract(
+        input,
+        &["BIG_CONTENT"],
+        TagOptions::default()
+            .with_capture_text(true)
+            .with_fence(tag::FENCE_BRACKETS),
+    );
 
     for part in &parts {
         match part {
@@ -54,16 +60,17 @@ The multiline bracket-fence style keeps large tagged content visually separate f
 For high-performance scenarios, use `extract_refs` to get `PartRef` values that borrow slices from the original input.
 
 ```rust
-use markex::tag::{self, PartRef};
+use markex::tag::{self, PartRef, TagOptions};
 
 let input = r#"[[[BIG_CONTENT path="/some/path.txt"]]]
 ... some big content
 [[[/BIG_CONTENT]]]"#;
-let parts_ref = tag::extract_refs_with_fence(
+let parts_ref = tag::extract_refs(
     input,
     &["BIG_CONTENT"],
-    true,
-    tag::FENCE_BRACKETS,
+    TagOptions::default()
+        .with_capture_text(true)
+        .with_fence(tag::FENCE_BRACKETS),
 );
 
 for part in parts_ref {
@@ -76,7 +83,7 @@ for part in parts_ref {
 
 ## API Highlights
 
-- `tag::extract(...) -> Parts`: Returns owned data.
-- `tag::extract_refs(...) -> PartsRef`: Returns references (zero-copy).
+- `tag::extract(..., options) -> Parts`: Returns owned data.
+- `tag::extract_refs(..., options) -> PartsRef`: Returns references (zero-copy).
 - `Parts / PartsRef`: Collection-like structures with `tag_elems()`, `texts()`, and iteration support.
 - `TagIter / TagRefIter`: Lower-level iterators for streaming processing.

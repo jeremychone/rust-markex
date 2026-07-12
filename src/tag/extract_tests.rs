@@ -1,6 +1,6 @@
 //! Tests for the parser module.
 
-use super::{extract, extract_with_fence, extract_with_options};
+use super::extract;
 use crate::tag::{FENCE_BRACKETS, Part, TagElem, TagFence, TagOptions};
 use std::collections::HashMap;
 
@@ -13,7 +13,7 @@ fn test_tag_parser_simple_with_text() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 
 	// -- Check
 	assert_eq!(result.tag_names(), vec!["DATA"]);
@@ -40,7 +40,7 @@ fn test_tag_parser_simple_without_text() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, false);
+	let result = extract(input, &tag_names, None);
 
 	// -- Check
 	assert_eq!(result.parts().len(), 1);
@@ -64,7 +64,7 @@ fn test_tag_parser_multiple_tags_with_attrs() -> Result<()> {
 	let tag_names = ["FILE", "DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 
 	// -- Check
 	assert_eq!(result.parts().len(), 5);
@@ -109,8 +109,8 @@ fn test_tag_parser_no_tags() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result_with_text = extract(input, &tag_names, true);
-	let result_without_text = extract(input, &tag_names, false);
+	let result_with_text = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
+	let result_without_text = extract(input, &tag_names, None);
 
 	// -- Check
 	assert_eq!(result_with_text.parts().len(), 1);
@@ -131,7 +131,7 @@ fn test_tag_parser_empty_input() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 
 	// -- Check
 	assert!(result.parts().is_empty());
@@ -146,7 +146,7 @@ fn test_tag_parser_only_tag() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 
 	// -- Check
 	assert_eq!(result.parts().len(), 1);
@@ -170,7 +170,7 @@ fn test_tag_parser_adjacent_tags() -> Result<()> {
 	let tag_names = ["A", "B"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 
 	// -- Check
 	assert_eq!(result.parts().len(), 2);
@@ -203,7 +203,7 @@ fn test_tag_parser_tag_elems() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 	let tag_elems = result.tag_elems();
 
 	// -- Check
@@ -223,7 +223,7 @@ fn test_tag_parser_into_tag_elems() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 	let tag_elems = result.into_tag_elems();
 
 	// -- Check
@@ -243,7 +243,7 @@ fn test_tag_parser_texts() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 	let texts = result.texts();
 
 	// -- Check
@@ -261,7 +261,7 @@ fn test_tag_parser_into_texts() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 	let texts = result.into_texts();
 
 	// -- Check
@@ -279,7 +279,7 @@ fn test_tag_parser_into_with_extrude_content() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract(input, &tag_names, true);
+	let result = extract(input, &tag_names, TagOptions::default().with_capture_text(true));
 	let (tag_elems, text_content) = result.into_with_extrude_content();
 
 	// -- Check
@@ -300,7 +300,11 @@ fn test_tag_parser_bracket3_fence() -> Result<()> {
 	let tag_names = ["FILE", "DELETE"];
 
 	// -- Exec
-	let result = extract_with_fence(input, &tag_names, true, FENCE_BRACKETS);
+	let result = extract(
+		input,
+		&tag_names,
+		TagOptions::default().with_capture_text(true).with_fence(FENCE_BRACKETS),
+	);
 
 	// -- Check
 	assert_eq!(result.parts().len(), 5);
@@ -352,7 +356,7 @@ fn test_tag_parser_custom_fence() -> Result<()> {
 	let tag_names = ["DATA"];
 
 	// -- Exec
-	let result = extract_with_fence(input, &tag_names, false, fence);
+	let result = extract(input, &tag_names, TagOptions::default().with_fence(fence));
 
 	// -- Check
 	let mut attrs = HashMap::new();
@@ -382,14 +386,18 @@ fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 
 	// -- Exec & Check
 	for (input, expected_content) in cases {
-		let result = extract_with_fence(input, &["FILE"], false, FENCE_BRACKETS);
+		let result = extract(input, &["FILE"], TagOptions::default().with_fence(FENCE_BRACKETS));
 		let tag_elems = result.tag_elems();
 		let tag_elem = tag_elems.first().ok_or("should extract a FILE element")?;
 
 		assert_eq!(tag_elem.content, expected_content);
 	}
 
-	let self_closing = extract_with_fence(r#"[[[DELETE path="temp.txt" /]]]"#, &["DELETE"], false, FENCE_BRACKETS);
+	let self_closing = extract(
+		r#"[[[DELETE path="temp.txt" /]]]"#,
+		&["DELETE"],
+		TagOptions::default().with_fence(FENCE_BRACKETS),
+	);
 	let delete_elems = self_closing.tag_elems();
 	let delete_elem = delete_elems.first().ok_or("should extract a self-closing DELETE element")?;
 
@@ -403,8 +411,11 @@ fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 		"temp.txt"
 	);
 
-	let compact_self_closing =
-		extract_with_fence(r#"[[[DELETE path="cache.txt"/]]]"#, &["DELETE"], false, FENCE_BRACKETS);
+	let compact_self_closing = extract(
+		r#"[[[DELETE path="cache.txt"/]]]"#,
+		&["DELETE"],
+		TagOptions::default().with_fence(FENCE_BRACKETS),
+	);
 	let compact_delete_elems = compact_self_closing.tag_elems();
 	let compact_delete_elem = compact_delete_elems
 		.first()
@@ -424,7 +435,7 @@ fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 }
 
 #[test]
-fn test_tag_parser_extract_with_options_default_and_fence() -> Result<()> {
+fn test_tag_parser_extract_with_default_and_fence_options() -> Result<()> {
 	// -- Setup & Fixtures
 	let xml_input = "Before <DATA>content</DATA> After";
 	let bracket_input = r#"Before [[[DATA]]]content[[[/DATA]]] After"#;
@@ -433,10 +444,22 @@ fn test_tag_parser_extract_with_options_default_and_fence() -> Result<()> {
 	let bracket_options = TagOptions::default().with_fence(FENCE_BRACKETS);
 
 	// -- Exec
-	let default_result = extract_with_options(xml_input, &tag_names, true, default_options);
-	let existing_default_result = extract(xml_input, &tag_names, true);
-	let option_fence_result = extract_with_options(bracket_input, &tag_names, true, bracket_options);
-	let existing_fence_result = extract_with_fence(bracket_input, &tag_names, true, FENCE_BRACKETS);
+	let default_result = extract(
+		xml_input,
+		&tag_names,
+		default_options.with_capture_text(true),
+	);
+	let existing_default_result = extract(xml_input, &tag_names, TagOptions::default().with_capture_text(true));
+	let option_fence_result = extract(
+		bracket_input,
+		&tag_names,
+		bracket_options.with_capture_text(true),
+	);
+	let existing_fence_result = extract(
+		bracket_input,
+		&tag_names,
+		TagOptions::default().with_capture_text(true).with_fence(FENCE_BRACKETS),
+	);
 
 	// -- Check
 	assert_eq!(default_options.fence, None);
@@ -455,8 +478,8 @@ fn test_tag_extract_auto_close_with_options_and_normal_close_precedence() -> Res
 	let options = TagOptions::default().with_auto_close(true);
 
 	// -- Exec
-	let auto_close_result = extract_with_options(auto_close_input, &tag_names, false, options);
-	let normally_closed_result = extract_with_options(normally_closed_input, &tag_names, false, options);
+	let auto_close_result = extract(auto_close_input, &tag_names, options);
+	let normally_closed_result = extract(normally_closed_input, &tag_names, options);
 
 	// -- Check
 	let auto_close_tags = auto_close_result.tag_elems();

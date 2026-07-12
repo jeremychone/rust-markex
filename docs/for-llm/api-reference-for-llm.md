@@ -13,12 +13,8 @@ pub enum Error { Custom(String), ... }
 
 ### Core Functions
 
-- `fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> Parts`
-- `fn extract_with_fence(input: &str, tag_names: &[&str], capture_text: bool, fence: TagFence) -> Parts`
-- `fn extract_with_options(input: &str, tag_names: &[&str], capture_text: bool, options: TagOptions) -> Parts`
-- `fn extract_refs<'a>(input: &'a str, tag_names: &[&str], capture_text: bool) -> PartsRef<'a>`
-- `fn extract_refs_with_fence<'a>(input: &'a str, tag_names: &[&str], capture_text: bool, fence: TagFence) -> PartsRef<'a>`
-- `fn extract_refs_with_options<'a>(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions) -> PartsRef<'a>`
+- `fn extract(input: &str, tag_names: &[&str], options: impl Into<TagOptions>) -> Parts`
+- `fn extract_refs<'a>(input: &'a str, tag_names: &[&str], options: impl Into<TagOptions>) -> PartsRef<'a>`
 
 ### Custom Fences
 
@@ -30,6 +26,7 @@ pub struct TagFence {
     pub close_delim: &'static str,
     pub close_delim_alts: Option<&'static [&'static str]>,
     pub closing_tag_prefix: &'static str,
+    pub self_closing_suffix: &'static str,
 }
 ```
 
@@ -44,15 +41,19 @@ pub struct TagFence {
 - `FENCE_BRACKETS`: Triple-square-bracket delimiters for multiline structured content.
 `markex` includes [`tag::FENCE_XML`] and [`tag::FENCE_BRACKETS`], and applications can define their own fence values. `FENCE_BRACKETS` accepts both its canonical `]]]` closing delimiter and the tolerant `]]` fallback, including paired and self-closing forms.
 
-Pass a fence to `extract_with_fence`, `extract_refs_with_fence`, or either iterator's `new_with_fence` constructor. Self-closing tags place `closing_tag_prefix` immediately before `close_delim`, such as `<DELETE />` or `[[[DELETE /]]]`.
+Pass a fence through `TagOptions::default().with_fence(...)` to `extract`, `extract_refs`, or either iterator's `new` constructor. Self-closing tags place `self_closing_suffix` immediately before `close_delim`, such as `<DELETE />` or `[[[DELETE /]]]`.
 
 ```rust
-use markex::tag::{extract_with_fence, FENCE_BRACKETS};
+use markex::tag::{extract, FENCE_BRACKETS, TagOptions};
 
 let input = r#"[[[BIG_CONTENT path="/some/path.txt"]]]
 ... some big content
 [[[/BIG_CONTENT]]]"#;
-let parts = extract_with_fence(input, &["BIG_CONTENT"], false, FENCE_BRACKETS);
+let parts = extract(
+    input,
+    &["BIG_CONTENT"],
+    TagOptions::default().with_fence(FENCE_BRACKETS),
+);
 let file = &parts.tag_elems()[0];
 
 assert_eq!(file.tag, "BIG_CONTENT");
@@ -72,13 +73,18 @@ let fence = TagFence {
     close_delim: "}}",
     close_delim_alts: None,
     closing_tag_prefix: "/",
+    self_closing_suffix: "/",
 };
-let parts = extract_with_fence("{{DATA key=value}}payload{{/DATA}}", &["DATA"], false, fence);
+let parts = extract(
+    "{{DATA key=value}}payload{{/DATA}}",
+    &["DATA"],
+    TagOptions::default().with_fence(fence),
+);
 
 assert_eq!(parts.tag_elems()[0].content, "payload");
 ```
 
-`FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, so a multiline block may use `[[[BIG_CONTENT]]` and `[[[/BIG_CONTENT]]`. Custom [`TagFence`] values can opt into the same tolerant behavior with `close_delim_alts`. The canonical delimiter is preferred whenever it and an alternate begin at the same position.
+`FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, so a multiline block may use `[[[BIG_CONTENT]]` and `[[[/BIG_CONTENT]]`. Custom [`TagFence`] values can opt into the same tolerant behavior with `close_delim_alts`. The canonical delimiter is preferred whenever it and an alternate begin at the same position. Use `TagOptions::with_capture_text(true)` when text outside matched elements must be returned.
 
 ### Parser Options
 
@@ -166,14 +172,9 @@ pub enum PartRef<'a> {
 
 **Constructors:**
 
-- `TagIter::new(input: &'a str, tag_names: &[&str], capture_text: bool)`
-- `TagIter::new_single_tag(input: &'a str, tag_name: &'a str, capture_text: bool)`
-- `TagIter::new_with_fence(input: &'a str, tag_names: &[&str], capture_text: bool, fence: TagFence)`
-- `TagIter::new_with_options(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions)`
-- `TagRefIter::new(input: &'a str, tag_names: &[&str], capture_text: bool)`
-- `TagRefIter::new_with_fence(input: &'a str, tag_names: &[&str], capture_text: bool, fence: TagFence)`
-- `TagRefIter::new_with_options(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions)`
+- `TagIter::new(input: &'a str, tag_names: &[&str], options: impl Into<TagOptions>)`
+- `TagIter::new_single_tag(input: &'a str, tag_name: &'a str, options: impl Into<TagOptions>)`
+- `TagRefIter::new(input: &'a str, tag_names: &[&str], options: impl Into<TagOptions>)`
 
-`TagIter::new_single_tag` is the owned iterator convenience constructor. Both iterators provide `new_with_fence` and
-`new_with_options` for streaming extraction with custom configuration. Pass `TagOptions::with_auto_close(true)` to
-either `new_with_options` constructor to enable streaming auto-close recovery.
+`TagIter::new_single_tag` is the owned iterator convenience constructor. Pass fluent `TagOptions` configuration to
+either `new` constructor for custom fences, text capture, and streaming auto-close recovery.

@@ -12,7 +12,7 @@ fn test_support_tag_elem_iter_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 5);
@@ -51,7 +51,8 @@ fn test_support_tag_elem_iter_bracket_fence_self_closing_spacing() -> Result<()>
 
 	// -- Exec & Check
 	for (text, expected_path) in cases {
-		let parts: Vec<Part> = TagIter::new_with_fence(text, &["DELETE"], false, FENCE_BRACKETS).collect();
+		let parts: Vec<Part> =
+			TagIter::new(text, &["DELETE"], TagOptions::default().with_fence(FENCE_BRACKETS)).collect();
 		let tag_elem = match parts.first() {
 			Some(Part::TagElem(tag_elem)) => tag_elem,
 			_ => return Err("should extract a self-closing DELETE element".into()),
@@ -78,7 +79,7 @@ fn test_support_tag_elem_iter_with_attrs() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 2);
@@ -110,7 +111,7 @@ fn test_support_tag_elem_iter_no_tags() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -126,7 +127,7 @@ fn test_support_tag_elem_iter_multiple_tag_names() -> Result<()> {
 	let tag_names = ["ONE", "TWO"];
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new(text, &tag_names, true).collect();
+	let parts: Vec<Part> = TagIter::new(text, &tag_names, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 5);
@@ -171,7 +172,7 @@ fn test_support_tag_elem_iter_self_closing_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -195,7 +196,7 @@ fn test_support_tag_elem_iter_self_closing_with_attrs() -> Result<()> {
 	let tag_name = "FILE";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, true).collect();
+	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -224,7 +225,7 @@ fn test_support_tag_elem_iter_self_closing_mixed() -> Result<()> {
 	let tag_names = ["X", "Y"];
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new(text, &tag_names, true).collect();
+	let parts: Vec<Part> = TagIter::new(text, &tag_names, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 5);
@@ -251,7 +252,8 @@ fn test_support_tag_elem_iter_bracket_fence_alternate_delimiters() -> Result<()>
 
 	// -- Exec & Check
 	for (text, expected_content) in cases {
-		let parts: Vec<Part> = TagIter::new_with_fence(text, &["DATA"], false, FENCE_BRACKETS).collect();
+		let parts: Vec<Part> =
+			TagIter::new(text, &["DATA"], TagOptions::default().with_fence(FENCE_BRACKETS)).collect();
 
 		assert_eq!(
 			parts,
@@ -275,8 +277,9 @@ fn test_support_tag_elem_iter_with_options_matches_fence() -> Result<()> {
 	let options = TagOptions::default().with_fence(FENCE_BRACKETS);
 
 	// -- Exec
-	let option_parts: Vec<Part> = TagIter::new_with_options(text, &tag_names, true, options).collect();
-	let fence_parts: Vec<Part> = TagIter::new_with_fence(text, &tag_names, true, FENCE_BRACKETS).collect();
+	let option_parts: Vec<Part> = TagIter::new(text, &tag_names, options.with_capture_text(true)).collect();
+	let fence_parts: Vec<Part> =
+		TagIter::new(text, &tag_names, TagOptions::default().with_fence(FENCE_BRACKETS).with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(option_parts, fence_parts);
@@ -291,7 +294,7 @@ fn test_tag_iter_auto_close_bracket_fence_same_name() -> Result<()> {
 	let options = TagOptions::default().with_fence(FENCE_BRACKETS).with_auto_close(true);
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_with_options(text, &["ITEM"], false, options).collect();
+	let parts: Vec<Part> = TagIter::new(text, &["ITEM"], options).collect();
 
 	// -- Check
 	assert_eq!(

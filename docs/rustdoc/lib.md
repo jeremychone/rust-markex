@@ -9,11 +9,11 @@ The primary API is [`tag`]. It supports XML-compatible tags by default, configur
 Extract XML-compatible elements and preserve the text that surrounds them:
 
 ```rust
-use markex::tag::{self, Part};
+use markex::tag::{self, Part, TagOptions};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = "Before <DATA id=123>payload</DATA> after.";
-    let parts = tag::extract(input, &["DATA"], true);
+    let parts = tag::extract(input, &["DATA"], TagOptions::default().with_capture_text(true));
 
     for part in parts {
         match part {
@@ -29,20 +29,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-`capture_text` controls whether text outside matched elements is emitted as `Part::Text`. Set it to `false` when only extracted elements are needed.
+[`TagOptions::with_capture_text`] controls whether text outside matched elements is emitted as `Part::Text`. Text capture is disabled by default.
 
 ## Custom fences
 
 Use a [`tag::TagFence`] when the structured payload uses delimiters other than XML. `markex` includes [`tag::FENCE_XML`] and [`tag::FENCE_BRACKETS`], and applications can define their own fence values. A fence can also accept alternate closing delimiters through [`tag::TagFence::close_delim_alts`].
 
 ```rust
-use markex::tag::{self, FENCE_BRACKETS};
+use markex::tag::{self, FENCE_BRACKETS, TagOptions};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = r#"[[[BIG_CONTENT path="/some/path.txt"]]]
 ... some big content
 [[[/BIG_CONTENT]]]"#;
-    let parts = tag::extract_with_fence(input, &["BIG_CONTENT"], false, FENCE_BRACKETS);
+    let parts = tag::extract(
+        input,
+        &["BIG_CONTENT"],
+        TagOptions::default().with_fence(FENCE_BRACKETS),
+    );
     let file = parts
         .into_tag_elems()
         .into_iter()
@@ -67,9 +71,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         open_delim: "{{",
         close_delim: "}}",
     close_delim_alts: None,
-        closing_tag_prefix: "/",
+    closing_tag_prefix: "/",
+    self_closing_suffix: "/",
     };
-    let parts = tag::extract_with_fence("{{DATA}}value{{/DATA}}", &["DATA"], false, fence);
+    let parts = tag::extract(
+        "{{DATA}}value{{/DATA}}",
+        &["DATA"],
+        TagOptions::default().with_fence(fence),
+    );
     let element = parts
         .into_tag_elems()
         .into_iter()
@@ -86,6 +95,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Owned and borrowed extraction
 
-[`tag::extract`] and [`tag::extract_with_fence`] return owned [`tag::Parts`] values. Use [`tag::extract_refs`] or [`tag::extract_refs_with_fence`] when the input must remain available and allocations for extracted strings should be avoided. These return [`tag::PartsRef`], whose text, tag names, attributes, and content borrow from the input.
+[`tag::extract`] returns owned [`tag::Parts`] values. Use [`tag::extract_refs`] when the input must remain available and allocations for extracted strings should be avoided. These return [`tag::PartsRef`], whose text, tag names, attributes, and content borrow from the input. Configure custom fences and text capture with [`tag::TagOptions`].
 
 For streaming processing, use [`tag::TagIter`] or [`tag::TagRefIter`] directly.

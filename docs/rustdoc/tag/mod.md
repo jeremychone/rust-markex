@@ -2,8 +2,7 @@
 
 This module extracts configured paired and self-closing tags from an input string. It is intentionally non-validating: it recognizes requested structures without attempting to parse or validate an entire markup document.
 
-Use [`extract`] for XML-compatible tags, [`extract_with_fence`] when the input uses a custom [`TagFence`], or
-[`extract_with_options`] for extensible parser configuration.
+Use [`extract`] with [`TagOptions`] for XML-compatible tags and extensible parser configuration.
 
 ## Extracting elements
 
@@ -11,13 +10,13 @@ Use [`extract`] for XML-compatible tags, [`extract_with_fence`] when the input u
 use markex::tag::{self, Part};
 
 let input = "Start <FILE path=\"a.txt\">contents</FILE> end";
-let parts = tag::extract(input, &["FILE"], true);
+let parts = tag::extract(input, &["FILE"], TagOptions::default().with_capture_text(true));
 
 assert!(matches!(parts.parts()[0], Part::Text(_)));
 assert_eq!(parts.tag_elems()[0].content, "contents");
 ```
 
-The `capture_text` argument determines whether unmatched spans are returned as text parts. When enabled, result ordering matches the source input.
+[`TagOptions::with_capture_text`] determines whether unmatched spans are returned as text parts. When enabled, result ordering matches the source input.
 
 Owned extraction returns [`Parts`], containing [`Part::Text`] and [`Part::TagElem`] values. A [`TagElem`] owns its name, attributes, and content.
 
@@ -40,7 +39,7 @@ let input = r#"[[[BIG_CONTENT path="/some/path.txt"]]]
 ... some big content
 [[[/BIG_CONTENT]]]"#;
 
-let parts = tag::extract_with_fence(input, &["BIG_CONTENT"], false, FENCE_BRACKETS);
+let parts = tag::extract(input, &["BIG_CONTENT"], TagOptions::default().with_fence(FENCE_BRACKETS));
 
 assert_eq!(parts.tag_elems()[0].content, "\n... some big content\n");
 ```
@@ -61,12 +60,12 @@ let fence = TagFence {
     close_delim_alts: Some(&["}"]),
     closing_tag_prefix: "/",
 };
-let parts = tag::extract_with_fence("{{DATA}payload{{/DATA}", &["DATA"], false, fence);
+let parts = tag::extract("{{DATA}payload{{/DATA}", &["DATA"], TagOptions::default().with_fence(fence));
 
 assert_eq!(parts.tag_elems()[0].content, "payload");
 ```
 
-Use [`extract_refs_with_fence`] for the same syntax when zero-copy results are needed.
+Use [`extract_refs`] with the same options for zero-copy results.
 
 ## Options
 
@@ -77,7 +76,7 @@ Use [`extract_refs_with_fence`] for the same syntax when zero-copy results are n
 use markex::tag::{self, FENCE_BRACKETS, TagOptions};
 
 let options = TagOptions::default().with_fence(FENCE_BRACKETS);
-let parts = tag::extract_with_options("[[[DATA]]]content[[[/DATA]]]", &["DATA"], false, options);
+let parts = tag::extract("[[[DATA]]]content[[[/DATA]]]", &["DATA"], options);
 
 assert_eq!(parts.tag_elems()[0].content, "content");
 ```
@@ -90,7 +89,7 @@ By default, extraction requires a matching closing tag. With `auto_close` enable
 use markex::tag::{self, TagOptions};
 
 let options = TagOptions::default().with_auto_close(true);
-let parts = tag::extract_with_options("<FILE>first <DATA>second</DATA>", &["FILE", "DATA"], false, options);
+let parts = tag::extract("<FILE>first <DATA>second</DATA>", &["FILE", "DATA"], options);
 let elements = parts.tag_elems();
 
 assert_eq!(elements[0].content, "first ");
@@ -102,14 +101,14 @@ Auto-close applies to same-name and different-name configured openings, but does
 
 ## Borrowed results
 
-[`extract_refs`], [`extract_refs_with_fence`], and [`extract_refs_with_options`] return [`PartsRef`]. Its [`PartRef`]
+[`extract_refs`] returns [`PartsRef`]. Its [`PartRef`]
 values and [`TagElemRef`] fields borrow from the original input, avoiding allocation for the extracted text and attribute strings.
 
 The input must outlive the returned `PartsRef`.
 
 ## Streaming iterators
 
-[`TagIter`] yields owned [`Part`] values, while [`TagRefIter`] yields borrowed [`PartRef`] values. Both provide `new`,
+`TagIter`] yields owned [`Part`] values, while [`TagRefIter`] yields borrowed [`PartRef`] values. Both provide `new`,
 `new_with_fence`, and `new_with_options` constructors for incremental processing. [`TagIter`] also provides
 `new_single_tag` for single-tag owned extraction. Pass [`TagOptions::with_auto_close`] through either iterator's
 `new_with_options` constructor to enable streaming auto-close recovery.

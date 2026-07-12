@@ -31,3 +31,13 @@ assert!(!elements[1].auto_closed);
 ```
 
 When auto-close is disabled, extraction retains strict behavior. Candidate openings must be valid configured tags, so malformed or partial tag names do not synthesize a closing boundary.
+
+## Text capture
+
+Text fragments outside configured tags are omitted by default. Use [`TagOptions::with_capture_text`] to include them.
+
+```rust
+use markex::tag::TagOptions;
+
+let options = TagOptions::default().with_capture_text(true);
+```

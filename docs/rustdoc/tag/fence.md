@@ -1,6 +1,6 @@
 # Tag fences
 
-[`TagFence`] configures the delimiters recognized by tag extraction APIs. Pass a fence to [`crate::tag::extract_with_fence`], [`crate::tag::extract_refs_with_fence`], [`crate::tag::TagIter::new_with_fence`], or [`crate::tag::TagRefIter::new_with_fence`].
+[`TagFence`] configures the delimiters recognized by tag extraction APIs. Pass a fence through [`crate::tag::TagOptions::with_fence`] to [`crate::tag::extract`], [`crate::tag::extract_refs`], [`crate::tag::TagIter::new`], or [`crate::tag::TagRefIter::new`].
 
 The canonical `close_delim` ends opening and closing tags. `close_delim_alts` optionally supplies tolerant fallback delimiters. The parser chooses the earliest matching delimiter, and when multiple configured delimiters begin at the same byte position, it chooses the longest one. This preserves canonical syntax when a fallback is its prefix.
 
@@ -22,5 +22,6 @@ let fence = TagFence {
     close_delim: "}}",
     close_delim_alts: Some(&["}"]),
     closing_tag_prefix: "/",
+    self_closing_suffix: "/",
 };
 ```

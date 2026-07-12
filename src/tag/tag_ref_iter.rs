@@ -100,18 +100,9 @@ impl<'a> TagRefIter<'a> {
 	///
 	/// * `input` - The string slice to search within.
 	/// * `tag_names` - The names of the tags to search for (e.g., &["FILE", "DATA"]).
-	/// * `capture_text` - If true, includes `PartRef::Text` fragments in the result.
-	pub fn new(input: &'a str, tag_names: &[&str], capture_text: bool) -> Self {
-		Self::new_with_options(input, tag_names, capture_text, TagOptions::default())
-	}
-
-	/// Creates a new `TagRefIter` using the provided tag fence.
-	pub fn new_with_fence(input: &'a str, tag_names: &[&str], capture_text: bool, fence: TagFence) -> Self {
-		Self::new_with_options(input, tag_names, capture_text, TagOptions::default().with_fence(fence))
-	}
-
-	/// Creates a new `TagRefIter` using the provided options.
-	pub fn new_with_options(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions) -> Self {
+	/// * `options` - Parser configuration, or `None` for default options.
+	pub fn new(input: &'a str, tag_names: &[&str], options: impl Into<TagOptions>) -> Self {
+		let options = options.into();
 		let tag_infos = tag_names
 			.iter()
 			.map(|&name| TagPattern::new(name, options.fence_or_default()))
@@ -123,7 +114,7 @@ impl<'a> TagRefIter<'a> {
 			tag_patterns: tag_infos,
 			pending_tag: None,
 			finished: false,
-			capture_text,
+			capture_text: options.capture_text(),
 			auto_close: options.auto_close,
 		}
 	}

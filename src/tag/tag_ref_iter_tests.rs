@@ -1,7 +1,7 @@
 //! Tests for the TagContentIterator.
 
 use super::{PartRef, TagElemRef, TagRefIter};
-use crate::tag::{extract_refs, extract_refs_with_options, FENCE_BRACKETS, TagOptions};
+use crate::tag::{extract_refs, FENCE_BRACKETS, TagOptions};
 use std::collections::HashMap;
 use std::error::Error;
 // For tests, using a simple Result alias is often sufficient.
@@ -26,7 +26,7 @@ fn test_support_tag_content_iter_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -53,7 +53,8 @@ fn test_support_tag_content_iter_bracket_fence_compact_self_closing() -> Result<
 	let text = r#"[[[DELETE path="cache.txt"/]]]"#;
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &["DELETE"], false, FENCE_BRACKETS).collect();
+	let parts: Vec<PartRef> =
+		TagRefIter::new(text, &["DELETE"], TagOptions::default().with_fence(FENCE_BRACKETS)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -80,7 +81,7 @@ fn test_support_tag_content_iter_attrs() -> Result<()> {
 	let tag_name = "FILE";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -112,7 +113,7 @@ fn test_support_tag_content_iter_attrs_with_newline() -> Result<()> {
 	let tag_name = "FILE";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -144,7 +145,7 @@ fn test_support_tag_content_iter_multiple() -> Result<()> {
 	let tag_name = "ITEM";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -186,7 +187,7 @@ fn test_support_tag_content_iter_no_tags() -> Result<()> {
 	let tag_name = "MARKER";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -202,7 +203,7 @@ fn test_support_tag_content_iter_empty_content() -> Result<()> {
 	let tag_name = "EMPTY";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -230,7 +231,8 @@ fn test_support_tag_content_iter_nested_like() -> Result<()> {
 	let tag_name_inner = "INNER";
 
 	// -- Exec Outer
-	let parts_outer: Vec<PartRef> = TagRefIter::new(text, &[tag_name_outer], true).collect();
+	let parts_outer: Vec<PartRef> =
+		TagRefIter::new(text, &[tag_name_outer], TagOptions::default().with_capture_text(true)).collect();
 	let tags_outer = extract_tag_elem_refs(parts_outer);
 	// -- Check Outer
 	assert_eq!(tags_outer.len(), 1);
@@ -247,7 +249,8 @@ fn test_support_tag_content_iter_nested_like() -> Result<()> {
 	);
 
 	// -- Exec Inner
-	let parts_inner: Vec<PartRef> = TagRefIter::new(text, &[tag_name_inner], true).collect();
+	let parts_inner: Vec<PartRef> =
+		TagRefIter::new(text, &[tag_name_inner], TagOptions::default().with_capture_text(true)).collect();
 	let tags_inner = extract_tag_elem_refs(parts_inner);
 	// -- Check Inner
 	assert_eq!(tags_inner.len(), 1);
@@ -273,7 +276,7 @@ fn test_support_tag_content_iter_malformed_open() -> Result<()> {
 	let tag_name = "MARKER";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -290,7 +293,7 @@ fn test_support_tag_content_iter_unclosed() -> Result<()> {
 	let tag_name = "MARKER";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -308,7 +311,8 @@ fn test_support_tag_content_iter_edges() -> Result<()> {
 	let tag_name_end = "END";
 
 	// -- Exec Start
-	let parts_start: Vec<PartRef> = TagRefIter::new(text, &[tag_name_start], true).collect();
+	let parts_start: Vec<PartRef> =
+		TagRefIter::new(text, &[tag_name_start], TagOptions::default().with_capture_text(true)).collect();
 	let tags_start = extract_tag_elem_refs(parts_start);
 	// -- Check Start
 	assert_eq!(tags_start.len(), 1);
@@ -325,7 +329,8 @@ fn test_support_tag_content_iter_edges() -> Result<()> {
 	);
 
 	// -- Exec End
-	let parts_end: Vec<PartRef> = TagRefIter::new(text, &[tag_name_end], true).collect();
+	let parts_end: Vec<PartRef> =
+		TagRefIter::new(text, &[tag_name_end], TagOptions::default().with_capture_text(true)).collect();
 	let tags_end = extract_tag_elem_refs(parts_end);
 	// -- Check End
 	assert_eq!(tags_end.len(), 1);
@@ -351,7 +356,7 @@ fn test_support_tag_content_iter_incorrect_tag_name() -> Result<()> {
 	let tag_name = "MARKER"; // Searching for MARKER, not MARKERX
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -367,7 +372,7 @@ fn test_support_tag_content_iter_tag_name_prefix_check() -> Result<()> {
 	let tag_name = "TAG";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -394,7 +399,7 @@ fn test_support_tag_content_iter_multiple_tag_names() -> Result<()> {
 	let tag_names = ["ONE", "TWO"];
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &tag_names, true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &tag_names, TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -438,7 +443,7 @@ fn test_support_tag_content_iter_partref_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 3);
@@ -456,7 +461,7 @@ fn test_support_tag_content_iter_partref_no_tags() -> Result<()> {
 	let tag_name = "MARKER";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -472,7 +477,7 @@ fn test_support_tag_content_iter_partref_tag_at_start() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 2);
@@ -489,7 +494,7 @@ fn test_support_tag_content_iter_partref_tag_at_end() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 2);
@@ -506,7 +511,7 @@ fn test_support_tag_content_iter_partref_only_tag() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -522,7 +527,7 @@ fn test_support_tag_content_iter_partref_multiple_tags() -> Result<()> {
 	let tag_name = "X";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 5);
@@ -542,7 +547,7 @@ fn test_support_tag_content_iter_partref_adjacent_tags() -> Result<()> {
 	let tag_names = ["A", "B"];
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &tag_names, true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &tag_names, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 2);
@@ -559,7 +564,7 @@ fn test_support_tag_content_iter_partref_empty_input() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert!(parts.is_empty());
@@ -578,7 +583,7 @@ fn test_support_tag_content_iter_self_closing_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -605,7 +610,7 @@ fn test_support_tag_content_iter_self_closing_with_attrs() -> Result<()> {
 	let tag_name = "FILE";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -637,7 +642,8 @@ fn test_support_tag_content_iter_self_closing_with_surrounding_text() -> Result<
 	let tag_name = "TAG";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> =
+		TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 3);
@@ -664,7 +670,8 @@ fn test_support_tag_content_iter_self_closing_and_normal_mixed() -> Result<()> {
 	let tag_names = ["X", "Y"];
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &tag_names, true).collect();
+	let parts: Vec<PartRef> =
+		TagRefIter::new(text, &tag_names, TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -684,7 +691,8 @@ fn test_support_tag_content_iter_self_closing_only_tag() -> Result<()> {
 	let tag_name = "TAG";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], true).collect();
+	let parts: Vec<PartRef> =
+		TagRefIter::new(text, &[tag_name], TagOptions::default().with_capture_text(true)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -701,7 +709,7 @@ fn test_support_tag_content_iter_self_closing_no_content_no_capture_text() -> Re
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], false).collect();
+	let parts: Vec<PartRef> = TagRefIter::new(text, &[tag_name], None).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -719,7 +727,8 @@ fn test_support_tag_content_iter_bracket_fence_alternate_delimiters() -> Result<
 	let text = r#"[[[FILE]]]canonical[[[/FILE]]]"#;
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &["FILE"], false, FENCE_BRACKETS).collect();
+	let parts: Vec<PartRef> =
+		TagRefIter::new(text, &["FILE"], TagOptions::default().with_fence(FENCE_BRACKETS)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -737,7 +746,8 @@ fn test_support_tag_content_iter_bracket_fence_shortened_self_closing() -> Resul
 	let text = r#"[[[DELETE path="temp.txt" /]]"#;
 
 	// -- Exec
-	let parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &["DELETE"], false, FENCE_BRACKETS).collect();
+	let parts: Vec<PartRef> =
+		TagRefIter::new(text, &["DELETE"], TagOptions::default().with_fence(FENCE_BRACKETS)).collect();
 	let tags = extract_tag_elem_refs(parts);
 
 	// -- Check
@@ -765,8 +775,8 @@ fn test_support_tag_content_iter_extract_refs_with_options_matches_default() -> 
 	let options = TagOptions::default();
 
 	// -- Exec
-	let option_parts = extract_refs_with_options(text, &tag_names, true, options);
-	let default_parts = extract_refs(text, &tag_names, true);
+	let option_parts = extract_refs(text, &tag_names, options.with_capture_text(true));
+	let default_parts = extract_refs(text, &tag_names, TagOptions::default().with_capture_text(true));
 
 	// -- Check
 	assert_eq!(option_parts.parts(), default_parts.parts());
@@ -782,8 +792,9 @@ fn test_support_tag_content_iter_with_options_matches_fence() -> Result<()> {
 	let options = TagOptions::default().with_fence(FENCE_BRACKETS);
 
 	// -- Exec
-	let option_parts: Vec<PartRef> = TagRefIter::new_with_options(text, &tag_names, true, options).collect();
-	let fence_parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &tag_names, true, FENCE_BRACKETS).collect();
+	let option_parts: Vec<PartRef> = TagRefIter::new(text, &tag_names, options.with_capture_text(true)).collect();
+	let fence_parts: Vec<PartRef> =
+		TagRefIter::new(text, &tag_names, TagOptions::default().with_fence(FENCE_BRACKETS).with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(option_parts, fence_parts);
@@ -799,12 +810,12 @@ fn test_tag_ref_iter_auto_close_strict_and_malformed_candidates() -> Result<()> 
 	let tag_names = ["FILE", "DATA"];
 
 	// -- Exec
-	let strict_parts: Vec<PartRef> = TagRefIter::new(strict_input, &tag_names, true).collect();
-	let malformed_parts: Vec<PartRef> = TagRefIter::new_with_options(
+	let strict_parts: Vec<PartRef> =
+		TagRefIter::new(strict_input, &tag_names, TagOptions::default().with_capture_text(true)).collect();
+	let malformed_parts: Vec<PartRef> = TagRefIter::new(
 		malformed_input,
 		&tag_names,
-		true,
-		TagOptions::default().with_auto_close(true),
+		TagOptions::default().with_capture_text(true).with_auto_close(true),
 	)
 	.collect();
 
@@ -823,7 +834,7 @@ fn test_tag_ref_iter_auto_close_preserves_content_boundaries() -> Result<()> {
 
 	// -- Exec
 	let parts: Vec<PartRef> =
-		TagRefIter::new_with_options(input, &tag_names, true, TagOptions::default().with_auto_close(true)).collect();
+		TagRefIter::new(input, &tag_names, TagOptions::default().with_capture_text(true).with_auto_close(true)).collect();
 
 	// -- Check
 	let tags = extract_tag_elem_refs(parts);
@@ -846,18 +857,16 @@ fn test_tag_ref_iter_auto_close_empty_and_nested_configured_tags() -> Result<()>
 	let nested_input = "<OUTER><INNER>value</INNER></OUTER>";
 
 	// -- Exec
-	let empty_parts: Vec<PartRef> = TagRefIter::new_with_options(
+	let empty_parts: Vec<PartRef> = TagRefIter::new(
 		empty_input,
 		&["FILE", "DATA"],
-		false,
 		TagOptions::default().with_auto_close(true),
 	)
 	.collect();
-	let nested_parts: Vec<PartRef> = TagRefIter::new_with_options(
+	let nested_parts: Vec<PartRef> = TagRefIter::new(
 		nested_input,
 		&["OUTER", "INNER"],
-		true,
-		TagOptions::default().with_auto_close(true),
+		TagOptions::default().with_capture_text(true).with_auto_close(true),
 	)
 	.collect();
 
