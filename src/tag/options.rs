@@ -12,7 +12,7 @@ pub struct TagOptions {
 	pub auto_close: bool,
 
 	/// Whether to include text fragments outside extracted tags.
-	capture_text: bool,
+	pub capture_text: bool,
 }
 
 // region:    --- Fluid Constructors & Chainables
