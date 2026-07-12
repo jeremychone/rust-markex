@@ -1,7 +1,7 @@
 //! Tests for the TagContentIterator.
 
 use super::{PartRef, TagElemRef, TagRefIter};
-use crate::tag::FENCE_BRACKETS;
+use crate::tag::{extract_refs, extract_refs_with_options, FENCE_BRACKETS, TagOptions};
 use std::collections::HashMap;
 use std::error::Error;
 // For tests, using a simple Result alias is often sufficient.
@@ -738,6 +738,40 @@ fn test_support_tag_content_iter_bracket_fence_shortened_self_closing() -> Resul
 			.ok_or("should extract the DELETE path attribute")?,
 		&"temp.txt"
 	);
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_content_iter_extract_refs_with_options_matches_default() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = "Before <DATA>content</DATA> After";
+	let tag_names = ["DATA"];
+	let options = TagOptions::default();
+
+	// -- Exec
+	let option_parts = extract_refs_with_options(text, &tag_names, true, options);
+	let default_parts = extract_refs(text, &tag_names, true);
+
+	// -- Check
+	assert_eq!(option_parts.parts(), default_parts.parts());
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_content_iter_with_options_matches_fence() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = r#"Before [[[DATA]]]content[[[/DATA]]] After"#;
+	let tag_names = ["DATA"];
+	let options = TagOptions::default().with_fence(FENCE_BRACKETS);
+
+	// -- Exec
+	let option_parts: Vec<PartRef> = TagRefIter::new_with_options(text, &tag_names, true, options).collect();
+	let fence_parts: Vec<PartRef> = TagRefIter::new_with_fence(text, &tag_names, true, FENCE_BRACKETS).collect();
+
+	// -- Check
+	assert_eq!(option_parts, fence_parts);
 
 	Ok(())
 }

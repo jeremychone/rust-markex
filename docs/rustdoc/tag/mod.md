@@ -2,7 +2,8 @@
 
 This module extracts configured paired and self-closing tags from an input string. It is intentionally non-validating: it recognizes requested structures without attempting to parse or validate an entire markup document.
 
-Use [`extract`] for XML-compatible tags, or [`extract_with_fence`] when the input uses a custom [`TagFence`].
+Use [`extract`] for XML-compatible tags, [`extract_with_fence`] when the input uses a custom [`TagFence`], or
+[`extract_with_options`] for extensible parser configuration.
 
 ## Extracting elements
 
@@ -67,12 +68,29 @@ assert_eq!(parts.tag_elems()[0].content, "payload");
 
 Use [`extract_refs_with_fence`] for the same syntax when zero-copy results are needed.
 
+## Options
+
+[`TagOptions`] configures optional extraction behavior. Its default value preserves XML-compatible parsing, while
+[`TagOptions::with_fence`] selects a custom [`TagFence`].
+
+```rust
+use markex::tag::{self, FENCE_BRACKETS, TagOptions};
+
+let options = TagOptions::default().with_fence(FENCE_BRACKETS);
+let parts = tag::extract_with_options("[[[DATA]]]content[[[/DATA]]]", &["DATA"], false, options);
+
+assert_eq!(parts.tag_elems()[0].content, "content");
+```
+
 ## Borrowed results
 
-[`extract_refs`] and [`extract_refs_with_fence`] return [`PartsRef`]. Its [`PartRef`] values and [`TagElemRef`] fields borrow from the original input, avoiding allocation for the extracted text and attribute strings.
+[`extract_refs`], [`extract_refs_with_fence`], and [`extract_refs_with_options`] return [`PartsRef`]. Its [`PartRef`]
+values and [`TagElemRef`] fields borrow from the original input, avoiding allocation for the extracted text and attribute strings.
 
 The input must outlive the returned `PartsRef`.
 
 ## Streaming iterators
 
-[`TagIter`] yields owned [`Part`] values, while [`TagRefIter`] yields borrowed [`PartRef`] values. Both provide `new`, `new_single_tag`, and `new_with_fence` constructors for incremental processing.
+[`TagIter`] yields owned [`Part`] values, while [`TagRefIter`] yields borrowed [`PartRef`] values. Both provide `new`,
+`new_with_fence`, and `new_with_options` constructors for incremental processing. [`TagIter`] also provides
+`new_single_tag` for single-tag owned extraction.

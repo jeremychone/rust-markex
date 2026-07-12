@@ -6,6 +6,7 @@ mod support;
 
 mod extract;
 mod fence;
+mod options;
 mod parts;
 mod parts_ref;
 #[allow(clippy::module_inception)]
@@ -15,10 +16,13 @@ mod tag_ref;
 mod tag_ref_iter;
 
 pub use extract::extract;
+pub use extract::extract_refs_with_options;
 pub use extract::extract_refs;
 pub use extract::extract_refs_with_fence;
+pub use extract::extract_with_options;
 pub use extract::extract_with_fence;
 pub use fence::*;
+pub use options::TagOptions;
 pub use parts::Parts;
 pub use parts::*;
 pub use parts_ref::*;

@@ -2,7 +2,7 @@
 #![doc = include_str!("../../docs/rustdoc/tag/tag_ref_iter.md")]
 
 use crate::tag::support::parse_attrs_ref;
-use crate::tag::{FENCE_XML, TagElemRef, TagFence};
+use crate::tag::{TagElemRef, TagFence, TagOptions};
 
 /// Represents a part of parsed content as a reference, either plain text or a tag element reference.
 #[derive(Debug, PartialEq)]
@@ -101,12 +101,20 @@ impl<'a> TagRefIter<'a> {
 	/// * `tag_names` - The names of the tags to search for (e.g., &["FILE", "DATA"]).
 	/// * `capture_text` - If true, includes `PartRef::Text` fragments in the result.
 	pub fn new(input: &'a str, tag_names: &[&str], capture_text: bool) -> Self {
-		Self::new_with_fence(input, tag_names, capture_text, FENCE_XML)
+		Self::new_with_options(input, tag_names, capture_text, TagOptions::default())
 	}
 
 	/// Creates a new `TagRefIter` using the provided tag fence.
 	pub fn new_with_fence(input: &'a str, tag_names: &[&str], capture_text: bool, fence: TagFence) -> Self {
-		let tag_infos = tag_names.iter().map(|&name| TagPattern::new(name, fence)).collect();
+		Self::new_with_options(input, tag_names, capture_text, TagOptions::default().with_fence(fence))
+	}
+
+	/// Creates a new `TagRefIter` using the provided options.
+	pub fn new_with_options(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions) -> Self {
+		let tag_infos = tag_names
+			.iter()
+			.map(|&name| TagPattern::new(name, options.fence_or_default()))
+			.collect();
 		TagRefIter {
 			input,
 			current_pos: 0,

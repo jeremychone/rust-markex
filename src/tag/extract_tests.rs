@@ -1,7 +1,7 @@
 //! Tests for the parser module.
 
-use super::{extract, extract_with_fence};
-use crate::tag::{FENCE_BRACKETS, Part, TagElem, TagFence};
+use super::{extract, extract_with_fence, extract_with_options};
+use crate::tag::{FENCE_BRACKETS, Part, TagElem, TagFence, TagOptions};
 use std::collections::HashMap;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -409,6 +409,29 @@ fn test_tag_parser_bracket3_fence_with_alternate_delimiters() -> Result<()> {
 			.ok_or("should extract the compact DELETE path attribute")?,
 		"cache.txt"
 	);
+
+	Ok(())
+}
+
+#[test]
+fn test_tag_parser_extract_with_options_default_and_fence() -> Result<()> {
+	// -- Setup & Fixtures
+	let xml_input = "Before <DATA>content</DATA> After";
+	let bracket_input = r#"Before [[[DATA]]]content[[[/DATA]]] After"#;
+	let tag_names = ["DATA"];
+	let default_options = TagOptions::default();
+	let bracket_options = TagOptions::default().with_fence(FENCE_BRACKETS);
+
+	// -- Exec
+	let default_result = extract_with_options(xml_input, &tag_names, true, default_options);
+	let existing_default_result = extract(xml_input, &tag_names, true);
+	let option_fence_result = extract_with_options(bracket_input, &tag_names, true, bracket_options);
+	let existing_fence_result = extract_with_fence(bracket_input, &tag_names, true, FENCE_BRACKETS);
+
+	// -- Check
+	assert_eq!(default_options.fence, None);
+	assert_eq!(default_result.parts(), existing_default_result.parts());
+	assert_eq!(option_fence_result.parts(), existing_fence_result.parts());
 
 	Ok(())
 }

@@ -15,8 +15,10 @@ pub enum Error { Custom(String), ... }
 
 - `fn extract(input: &str, tag_names: &[&str], capture_text: bool) -> Parts`
 - `fn extract_with_fence(input: &str, tag_names: &[&str], capture_text: bool, fence: TagFence) -> Parts`
+- `fn extract_with_options(input: &str, tag_names: &[&str], capture_text: bool, options: TagOptions) -> Parts`
 - `fn extract_refs<'a>(input: &'a str, tag_names: &[&str], capture_text: bool) -> PartsRef<'a>`
 - `fn extract_refs_with_fence<'a>(input: &'a str, tag_names: &[&str], capture_text: bool, fence: TagFence) -> PartsRef<'a>`
+- `fn extract_refs_with_options<'a>(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions) -> PartsRef<'a>`
 
 ### Custom Fences
 
@@ -77,6 +79,19 @@ assert_eq!(parts.tag_elems()[0].content, "payload");
 ```
 
 `FENCE_BRACKETS` also accepts `]]` as a fallback closing delimiter, so a multiline block may use `[[[BIG_CONTENT]]` and `[[[/BIG_CONTENT]]`. Custom [`TagFence`] values can opt into the same tolerant behavior with `close_delim_alts`. The canonical delimiter is preferred whenever it and an alternate begin at the same position.
+
+### Parser Options
+
+**Struct `TagOptions`**
+```rust
+pub struct TagOptions {
+    pub fence: Option<TagFence>,
+}
+```
+
+`TagOptions::default()` preserves XML-compatible parsing. Use `TagOptions::default().with_fence(FENCE_BRACKETS)` to
+configure bracket-tag parsing through `extract_with_options`, `extract_refs_with_options`, `TagIter::new_with_options`,
+or `TagRefIter::new_with_options`.
 
 ### Owned Types
 
@@ -145,7 +160,10 @@ pub enum PartRef<'a> {
 - `TagIter::new(input: &'a str, tag_names: &[&str], capture_text: bool)`
 - `TagIter::new_single_tag(input: &'a str, tag_name: &'a str, capture_text: bool)`
 - `TagIter::new_with_fence(input: &'a str, tag_names: &[&str], capture_text: bool, fence: TagFence)`
+- `TagIter::new_with_options(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions)`
 - `TagRefIter::new(input: &'a str, tag_names: &[&str], capture_text: bool)`
 - `TagRefIter::new_with_fence(input: &'a str, tag_names: &[&str], capture_text: bool, fence: TagFence)`
+- `TagRefIter::new_with_options(input: &'a str, tag_names: &[&str], capture_text: bool, options: TagOptions)`
 
-`TagIter::new_single_tag` is the owned iterator convenience constructor. Both iterators provide `new_with_fence` for streaming extraction with a custom fence.
+`TagIter::new_single_tag` is the owned iterator convenience constructor. Both iterators provide `new_with_fence` and
+`new_with_options` for streaming extraction with custom configuration.

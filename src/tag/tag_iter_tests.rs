@@ -1,6 +1,6 @@
 //! Tests for the TagElemIter.
 
-use crate::tag::{FENCE_BRACKETS, Part, TagElem, TagIter};
+use crate::tag::{FENCE_BRACKETS, Part, TagElem, TagIter, TagOptions};
 use std::collections::HashMap;
 
 type Result<T> = core::result::Result<T, Box<dyn std::error::Error>>;
@@ -255,6 +255,23 @@ fn test_support_tag_elem_iter_bracket_fence_alternate_delimiters() -> Result<()>
 			})]
 		);
 	}
+
+	Ok(())
+}
+
+#[test]
+fn test_support_tag_elem_iter_with_options_matches_fence() -> Result<()> {
+	// -- Setup & Fixtures
+	let text = r#"Before [[[DATA]]]content[[[/DATA]]] After"#;
+	let tag_names = ["DATA"];
+	let options = TagOptions::default().with_fence(FENCE_BRACKETS);
+
+	// -- Exec
+	let option_parts: Vec<Part> = TagIter::new_with_options(text, &tag_names, true, options).collect();
+	let fence_parts: Vec<Part> = TagIter::new_with_fence(text, &tag_names, true, FENCE_BRACKETS).collect();
+
+	// -- Check
+	assert_eq!(option_parts, fence_parts);
 
 	Ok(())
 }
