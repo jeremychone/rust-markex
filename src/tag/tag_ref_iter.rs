@@ -261,7 +261,7 @@ impl<'a> TagRefIter<'a> {
 
 			// --- Find the closing tag ---
 			let search_after_open_tag_idx = open_tag_close_start_idx + close_delim_len;
-			if search_after_open_tag_idx >= self.input.len() {
+			if search_after_open_tag_idx >= self.input.len() && !self.auto_close {
 				// Reached end of input before finding closing tag
 				return None;
 			}
@@ -286,7 +286,23 @@ impl<'a> TagRefIter<'a> {
 					end_idx: next_opening_idx - 1,
 				});
 			}
-			let (close_tag_start_offset, close_tag_len) = close_tag?;
+			let (close_tag_start_offset, close_tag_len) = match close_tag {
+				Some(close_tag) => close_tag,
+				None if self.auto_close => {
+					let content = &self.input[open_tag_end_idx + 1..];
+					self.current_pos = self.input.len();
+
+					return Some(TagElemRef {
+						tag_name,
+						attrs,
+						content,
+						auto_closed: true,
+						start_idx,
+						end_idx: self.input.len() - 1,
+					});
+				}
+				None => return None,
+			};
 			let close_tag_start_idx = search_after_open_tag_idx + close_tag_start_offset;
 			// Corrected end_idx calculation: it's the index of the '>' of the closing tag
 			// The end index should be the index of the last character of the closing tag '>'

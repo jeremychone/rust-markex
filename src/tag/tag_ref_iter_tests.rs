@@ -821,7 +821,17 @@ fn test_tag_ref_iter_auto_close_strict_and_malformed_candidates() -> Result<()> 
 
 	// -- Check
 	assert_eq!(strict_parts, vec![PartRef::Text(strict_input)]);
-	assert_eq!(malformed_parts, vec![PartRef::Text(malformed_input)]);
+	assert_eq!(
+		malformed_parts,
+		vec![PartRef::TagElemRef(TagElemRef {
+			tag_name: "FILE",
+			attrs: None,
+			content: "first <DATA_EXTRA>second</DATA_EXTRA>",
+			auto_closed: true,
+			start_idx: 0,
+			end_idx: malformed_input.len() - 1,
+		})]
+	);
 
 	Ok(())
 }
