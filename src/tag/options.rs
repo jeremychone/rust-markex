@@ -15,8 +15,7 @@ pub struct TagOptions {
 	pub capture_text: bool,
 }
 
-// region:    --- Fluid Constructors & Chainables
-
+/// Chainable Setters
 impl TagOptions {
 	/// Sets whether extraction includes text fragments outside extracted tags.
 	pub fn with_capture_text(mut self, capture_text: bool) -> Self {
@@ -37,8 +36,7 @@ impl TagOptions {
 	}
 }
 
-// endregion: --- Fluid Constructors & Chainables
-
+/// Accessors
 impl TagOptions {
 	pub(crate) fn capture_text(self) -> bool {
 		self.capture_text
@@ -49,11 +47,15 @@ impl TagOptions {
 	}
 }
 
+// region:    --- Froms
+
 impl From<Option<TagOptions>> for TagOptions {
 	fn from(options: Option<TagOptions>) -> Self {
 		options.unwrap_or_default()
 	}
 }
+
+// endregion: --- Froms
 
 // region:    --- Tests
 

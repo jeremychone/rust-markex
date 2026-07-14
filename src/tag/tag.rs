@@ -17,6 +17,7 @@ pub struct TagElem {
 	pub auto_closed: bool,
 }
 
+/// Constructors
 impl TagElem {
 	/// Creates a new `TagElem` with the specified name, optional attributes, and content.
 	pub fn new(name: impl Into<String>, attrs: Option<HashMap<String, String>>, content: impl Into<String>) -> Self {
@@ -29,6 +30,11 @@ impl TagElem {
 	}
 }
 
+// endregion: --- Froms
+
+// region:    --- Froms
+
+/// Conversions
 impl From<crate::tag::TagElemRef<'_>> for TagElem {
 	fn from(tag_ref: crate::tag::TagElemRef<'_>) -> Self {
 		TagElem {

@@ -30,6 +30,7 @@ pub struct TagPattern {
 	pub self_closing_suffix: String,
 }
 
+/// Constructors
 impl TagPattern {
 	pub fn new(tag_name: &str, fence: TagFence) -> Self {
 		let mut close_delims = vec![fence.close_delim];
@@ -93,6 +94,7 @@ pub struct TagRefIter<'a> {
 	auto_close: bool,
 }
 
+/// Constructors
 impl<'a> TagRefIter<'a> {
 	/// Creates a new `TagRefIter` for the given input string and tag names.
 	///
@@ -118,7 +120,10 @@ impl<'a> TagRefIter<'a> {
 			auto_close: options.auto_close,
 		}
 	}
+}
 
+/// Parsing support
+impl<'a> TagRefIter<'a> {
 	fn find_next_opening(&self, from_idx: usize) -> Option<(usize, &TagPattern)> {
 		let mut current_pos = from_idx;
 

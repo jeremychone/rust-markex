@@ -73,8 +73,13 @@ impl<'a, 'b> IntoIterator for &'b PartsRef<'a> {
 	}
 }
 
+// region:    --- Froms
+
 impl<'a> From<PartsRef<'a>> for Vec<PartRef<'a>> {
 	fn from(val: PartsRef<'a>) -> Self {
 		val.parts
 	}
 }
+
+// endregion: --- Froms
+
