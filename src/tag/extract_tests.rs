@@ -444,17 +444,9 @@ fn test_tag_parser_extract_with_default_and_fence_options() -> Result<()> {
 	let bracket_options = TagOptions::default().with_fence(FENCE_BRACKETS);
 
 	// -- Exec
-	let default_result = extract(
-		xml_input,
-		&tag_names,
-		default_options.with_capture_text(true),
-	);
+	let default_result = extract(xml_input, &tag_names, default_options.with_capture_text(true));
 	let existing_default_result = extract(xml_input, &tag_names, TagOptions::default().with_capture_text(true));
-	let option_fence_result = extract(
-		bracket_input,
-		&tag_names,
-		bracket_options.with_capture_text(true),
-	);
+	let option_fence_result = extract(bracket_input, &tag_names, bracket_options.with_capture_text(true));
 	let existing_fence_result = extract(
 		bracket_input,
 		&tag_names,

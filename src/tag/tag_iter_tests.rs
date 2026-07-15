@@ -12,7 +12,8 @@ fn test_support_tag_elem_iter_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
+	let parts: Vec<Part> =
+		TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 5);
@@ -79,7 +80,8 @@ fn test_support_tag_elem_iter_with_attrs() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
+	let parts: Vec<Part> =
+		TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 2);
@@ -111,7 +113,8 @@ fn test_support_tag_elem_iter_no_tags() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
+	let parts: Vec<Part> =
+		TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -172,7 +175,8 @@ fn test_support_tag_elem_iter_self_closing_simple() -> Result<()> {
 	let tag_name = "DATA";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
+	let parts: Vec<Part> =
+		TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -196,7 +200,8 @@ fn test_support_tag_elem_iter_self_closing_with_attrs() -> Result<()> {
 	let tag_name = "FILE";
 
 	// -- Exec
-	let parts: Vec<Part> = TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
+	let parts: Vec<Part> =
+		TagIter::new_single_tag(text, tag_name, TagOptions::default().with_capture_text(true)).collect();
 
 	// -- Check
 	assert_eq!(parts.len(), 1);
@@ -278,8 +283,12 @@ fn test_support_tag_elem_iter_with_options_matches_fence() -> Result<()> {
 
 	// -- Exec
 	let option_parts: Vec<Part> = TagIter::new(text, &tag_names, options.with_capture_text(true)).collect();
-	let fence_parts: Vec<Part> =
-		TagIter::new(text, &tag_names, TagOptions::default().with_fence(FENCE_BRACKETS).with_capture_text(true)).collect();
+	let fence_parts: Vec<Part> = TagIter::new(
+		text,
+		&tag_names,
+		TagOptions::default().with_fence(FENCE_BRACKETS).with_capture_text(true),
+	)
+	.collect();
 
 	// -- Check
 	assert_eq!(option_parts, fence_parts);

@@ -18,14 +18,19 @@ pub enum PartRef<'a> {
 pub struct TagPattern {
 	/// The original tag name (e.g., "FILE").
 	pub name: String,
+
 	/// The opening tag prefix (e.g., `<FILE`). Used to find the start of the tag.
 	pub start_tag_prefix: String,
+
 	/// The closing tag structure (e.g., `</FILE>`). Used to find the end of the element.
 	pub end_tags: Vec<String>,
+
 	/// The delimiters that end opening and closing tags.
 	pub close_delims: Vec<&'static str>,
+
 	/// The prefix between an opening delimiter and a closing tag name.
 	pub closing_tag_prefix: String,
+
 	/// The suffix that identifies a self-closing opening tag.
 	pub self_closing_suffix: String,
 }
