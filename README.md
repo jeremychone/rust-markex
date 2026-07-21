@@ -87,3 +87,7 @@ for part in parts_ref {
 - `tag::extract_refs(..., options) -> PartsRef`: Returns references (zero-copy).
 - `Parts / PartsRef`: Collection-like structures with `tag_elems()`, `texts()`, and iteration support.
 - `TagIter / TagRefIter`: Lower-level iterators for streaming processing.
+
+---
+
+[This repo](https://github.com/zcoder-run/rust-markex)
